@@ -1,0 +1,631 @@
+\appendix
+
+\chapter{Source Code and Documentation}
+\label{app:code}
+
+This appendix contains key source code listings, API documentation, YARA rules, and the user manual for MalGuard.
+
+\section{Desktop CLI - Main Entry Point}
+
+The complete CLI entry point with command parsing:
+
+\begin{lstlisting}[style=pythonstyle, caption={Desktop CLI Main Module (main.py)}, label=lst:main]
+#!/usr/bin/env python3
+"""
+MalGuard Desktop CLI - Signature-Based Malware Detection
+"""
+
+import argparse
+import json
+import sys
+from pathlib import Path
+from malguard import (
+    SignatureDatabase,
+    MalwareScanner,
+    QuarantineManager,
+    FileHasher,
+    Colors
+)
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog='malguard',
+        description='MalGuard - Signature-Based Malware Detection'
+    )
+    subparsers = parser.add_subparsers(dest='command', required=True)
+    
+    # scan command
+    scan_p = subparsers.add_parser('scan', help='Scan file/directory')
+    scan_p.add_argument('path', help='Path to scan')
+    scan_p.add_argument('--all', '-a', action='store_true',
+                        help='Scan all file types')
+    scan_p.add_argument('--json', '-j', action='store_true',
+                        help='JSON output')
+    
+    # add command
+    add_p = subparsers.add_parser('add', help='Add signature')
+    add_p.add_argument('file', help='File to hash')
+    add_p.add_argument('name', help='Malware name')
+    add_p.add_argument('--severity', '-s', default='medium',
+                       choices=['low', 'medium', 'high', 'critical'])
+    
+    # remove command
+    rm_p = subparsers.add_parser('remove', help='Remove signature')
+    rm_p.add_argument('hash', help='SHA-256 hash to remove')
+    
+    # list command
+    subparsers.add_parser('list', help='List all signatures')
+    
+    # import/export commands
+    imp_p = subparsers.add_parser('import', help='Import signatures')
+    imp_p.add_argument('file', help='JSON file to import')
+    
+    exp_p = subparsers.add_parser('export', help='Export signatures')
+    exp_p.add_argument('file', help='Output JSON file')
+    
+    # history/stats commands
+    subparsers.add_parser('history', help='View scan history')
+    subparsers.add_parser('stats', help='View statistics')
+    
+    # quarantine subcommand
+    quar_p = subparsers.add_parser('quarantine', help='Manage quarantine')
+    quar_sub = quar_p.add_subparsers(dest='quar_cmd')
+    quar_sub.add_parser('list', help='List quarantined files')
+    
+    restore_p = quar_sub.add_parser('restore', help='Restore file')
+    restore_p.add_argument('hash', help='File hash')
+    restore_p.add_argument('--to', help='Restore path')
+    
+    del_p = quar_sub.add_parser('delete', help='Delete file')
+    del_p.add_argument('hash', help='File hash')
+    
+    quar_sub.add_parser('clear', help='Clear all')
+    
+    args = parser.parse_args()
+    
+    # Initialize components
+    db = SignatureDatabase()
+    scanner = MalwareScanner(db)
+    quarantine = QuarantineManager()
+    
+    # Execute command
+    try:
+        if args.command == 'scan':
+            handle_scan(args, scanner)
+        elif args.command == 'add':
+            handle_add(args, db)
+        elif args.command == 'remove':
+            handle_remove(args, db)
+        elif args.command == 'list':
+            handle_list(db)
+        elif args.command == 'import':
+            handle_import(args, db)
+        elif args.command == 'export':
+            handle_export(args, db)
+        elif args.command == 'history':
+            handle_history(scanner)
+        elif args.command == 'stats':
+            handle_stats(scanner)
+        elif args.command == 'quarantine':
+            handle_quarantine(args, quarantine)
+    except Exception as e:
+        print(f"{Colors.RED}Error: {e}{Colors.RESET}")
+        sys.exit(1)
+
+def handle_scan(args, scanner):
+    """Handle scan command."""
+    path = Path(args.path)
+    
+    if path.is_file():
+        result = scanner.scan_file(str(path), args.all)
+        display_result(result, args.json)
+        if result.get('detected'):
+            sys.exit(2)
+    elif path.is_dir():
+        results = scanner.scan_directory(str(path), args.all)
+        detected = sum(1 for r in results if r.get('detected'))
+        display_results(results, args.json)
+        if detected > 0:
+            sys.exit(2)
+    else:
+        print(f"{Colors.RED}Path not found: {path}{Colors.RESET}")
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()
+\end{lstlisting}
+
+\section{Backend API - Signature Routes}
+
+Complete signature management routes:
+
+\begin{lstlisting}[style=pythonstyle, caption={Signature Routes (routes/signatures.py)}, label=lst:sigroutes]
+from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
+from typing import List, Optional
+import json
+import tempfile
+from models import Signature, SignatureCreate, SignatureResponse
+from database import db
+
+router = APIRouter(prefix="/signatures", tags=["Signatures"])
+
+@router.get("/", response_model=List[Signature])
+async def list_signatures(
+    limit: int = 100,
+    offset: int = 0
+):
+    """List all signatures with pagination."""
+    return db.get_signatures(limit=limit, offset=offset)
+
+@router.get("/search")
+async def search_signatures(q: str):
+    """Search signatures by name or hash."""
+    if len(q) < 2:
+        raise HTTPException(400, "Query too short")
+    return db.search_signatures(q)
+
+@router.get("/filter/severity/{level}")
+async def filter_by_severity(level: str):
+    """Filter signatures by severity level."""
+    valid_levels = ['low', 'medium', 'high', 'critical']
+    if level not in valid_levels:
+        raise HTTPException(400, f"Invalid severity. Use: {valid_levels}")
+    return db.get_signatures_by_severity(level)
+
+@router.get("/{hash}", response_model=Optional[Signature])
+async def get_signature(hash: str):
+    """Get a specific signature by hash."""
+    sig = db.get_signature(hash)
+    if not sig:
+        raise HTTPException(404, "Signature not found")
+    return sig
+
+@router.post("/", response_model=Signature)
+async def add_signature(sig: SignatureCreate):
+    """Add a new malware signature."""
+    if db.get_signature(sig.hash):
+        raise HTTPException(400, "Signature already exists")
+    return db.add_signature(sig)
+
+@router.post("/bulk")
+async def bulk_import(signatures: List[SignatureCreate]):
+    """Import multiple signatures at once."""
+    added = 0
+    skipped = 0
+    for sig in signatures:
+        if not db.get_signature(sig.hash):
+            db.add_signature(sig)
+            added += 1
+        else:
+            skipped += 1
+    return {"added": added, "skipped": skipped}
+
+@router.post("/import-json")
+async def import_from_json(file: UploadFile = File(...)):
+    """Import signatures from uploaded JSON file."""
+    content = await file.read()
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError:
+        raise HTTPException(400, "Invalid JSON file")
+    
+    signatures = data if isinstance(data, list) else data.get('signatures', [])
+    added = 0
+    for sig in signatures:
+        if not db.get_signature(sig['hash']):
+            db.add_signature(SignatureCreate(**sig))
+            added += 1
+    
+    return {"message": f"Imported {added} signatures", "added": added}
+
+@router.get("/export")
+async def export_signatures():
+    """Export all signatures as JSON file."""
+    signatures = db.get_all_signatures()
+    
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', 
+                                      delete=False) as f:
+        json.dump({"signatures": signatures}, f, indent=2, default=str)
+        return FileResponse(
+            f.name,
+            media_type='application/json',
+            filename='malguard_signatures.json'
+        )
+
+@router.delete("/{hash}")
+async def delete_signature(hash: str):
+    """Delete a signature by hash."""
+    if not db.delete_signature(hash):
+        raise HTTPException(404, "Signature not found")
+    return {"success": True, "message": "Signature deleted"}
+
+@router.delete("/all")
+async def delete_all_signatures():
+    """Delete all signatures (use with caution)."""
+    count = db.delete_all_signatures()
+    return {"success": True, "deleted": count}
+\end{lstlisting}
+
+\section{YARA Rules}
+
+The complete YARA rule file for pattern-based detection:
+
+\begin{lstlisting}[style=jsonstyle, caption={YARA Rules (data/yara\_rules/malware\_rules.yar)}, label=lst:yara]
+/*
+ * MalGuard YARA Rules
+ * Pattern-based malware detection rules
+ */
+
+rule EICAR_Test_File {
+    meta:
+        description = "EICAR Test File"
+        author = "MalGuard"
+        severity = "low"
+    strings:
+        $eicar = "X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR"
+    condition:
+        $eicar
+}
+
+rule Suspicious_PowerShell_Commands {
+    meta:
+        description = "Suspicious PowerShell usage"
+        author = "MalGuard"
+        severity = "medium"
+    strings:
+        $ps1 = "powershell" nocase
+        $ps2 = "-encodedcommand" nocase
+        $ps3 = "-windowstyle hidden" nocase
+        $ps4 = "bypass" nocase
+        $ps5 = "downloadstring" nocase
+        $ps6 = "invoke-expression" nocase
+        $ps7 = "iex(" nocase
+    condition:
+        ($ps1 and ($ps2 or $ps3 or $ps4)) or ($ps5 and $ps6) or $ps7
+}
+
+rule Ransomware_File_Extensions {
+    meta:
+        description = "Ransomware extension patterns"
+        author = "MalGuard"
+        severity = "critical"
+    strings:
+        $ext1 = ".encrypted"
+        $ext2 = ".locked"
+        $ext3 = ".crypted"
+        $ext4 = ".crypt"
+        $ext5 = ".locky"
+        $ext6 = ".wcry"
+        $ext7 = ".wncry"
+    condition:
+        any of them
+}
+
+rule Suspicious_Registry_Persistence {
+    meta:
+        description = "Registry persistence mechanisms"
+        author = "MalGuard"
+        severity = "high"
+    strings:
+        $reg1 = "CurrentVersion\\Run" nocase
+        $reg2 = "CurrentVersion\\RunOnce" nocase
+        $reg3 = "Winlogon\\Shell" nocase
+        $reg4 = "Winlogon\\Userinit" nocase
+    condition:
+        any of them
+}
+
+rule Packed_Executable_Indicators {
+    meta:
+        description = "Packed or compressed executable"
+        author = "MalGuard"
+        severity = "medium"
+    strings:
+        $upx = "UPX0"
+        $upx2 = "UPX1"
+        $aspack = "aPLib"
+        $mpress = "MPRESS1"
+        $pe_pack = ".packed"
+    condition:
+        any of them
+}
+
+rule Generic_Malware_Strings {
+    meta:
+        description = "Generic malware indicators"
+        author = "MalGuard"
+        severity = "medium"
+    strings:
+        $s1 = "backdoor" nocase
+        $s2 = "keylogger" nocase
+        $s3 = "rootkit" nocase
+        $s4 = "trojan" nocase
+        $s5 = "botnet" nocase
+    condition:
+        2 of them
+}
+
+rule Network_IOC_Patterns {
+    meta:
+        description = "Network IOC patterns"
+        author = "MalGuard"
+        severity = "high"
+    strings:
+        $c2 = /https?:\/\/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/
+        $tor = ".onion"
+        $pastebin = "pastebin.com/raw"
+    condition:
+        any of them
+}
+
+rule Suspicious_Batch_Commands {
+    meta:
+        description = "Suspicious batch file commands"
+        author = "MalGuard"
+        severity = "medium"
+    strings:
+        $del1 = "del /f /q" nocase
+        $del2 = "rmdir /s /q" nocase
+        $attrib = "attrib +h +s" nocase
+        $net = "net stop" nocase
+        $wmic = "wmic shadowcopy delete" nocase
+    condition:
+        2 of them
+}
+\end{lstlisting}
+
+\section{Sample Signatures Format}
+
+Example of the signature database JSON format:
+
+\begin{lstlisting}[style=jsonstyle, caption={Sample Signatures Format (sample\_signatures.json)}, label=lst:sampledb]
+{
+  "signatures": [
+    {
+      "hash": "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+      "name": "EICAR-Test-File",
+      "severity": "low",
+      "source": "EICAR",
+      "added_on": "2024-01-01T00:00:00"
+    },
+    {
+      "hash": "a1b2c3d4e5f6789012345678901234567890123456789012345678901234abcd",
+      "name": "Trojan.Zeus",
+      "severity": "critical",
+      "source": "Community",
+      "added_on": "2024-01-15T10:30:00"
+    },
+    {
+      "hash": "deadbeef12345678901234567890123456789012345678901234567890123456",
+      "name": "Ransomware.WannaCry",
+      "severity": "critical",
+      "source": "VirusTotal",
+      "added_on": "2024-02-01T08:00:00"
+    }
+  ]
+}
+\end{lstlisting}
+
+\section{API Endpoint Reference}
+
+Complete list of MalGuard Backend API endpoints:
+
+\begin{table}[h]
+\centering
+\caption{MalGuard API Endpoints}
+\label{tab:api_ref}
+\small
+\begin{tabular}{@{}llp{6cm}@{}}
+\toprule
+\textbf{Method} & \textbf{Endpoint} & \textbf{Description} \\
+\midrule
+GET & / & API welcome message \\
+GET & /health & Health check with DB status \\
+GET & /info & System information \\
+POST & /seed & Load sample signatures \\
+\midrule
+POST & /scan/file & Upload and scan single file \\
+POST & /scan/files & Upload and scan multiple files \\
+POST & /scan/hash & Check hash against database \\
+\midrule
+GET & /signatures & List all signatures (paginated) \\
+GET & /signatures/\{hash\} & Get specific signature \\
+GET & /signatures/search?q= & Search by name/hash \\
+GET & /signatures/filter/severity/\{level\} & Filter by severity \\
+POST & /signatures & Add new signature \\
+POST & /signatures/bulk & Bulk import signatures \\
+POST & /signatures/import-json & Import from JSON file \\
+GET & /signatures/export & Export as JSON file \\
+DELETE & /signatures/\{hash\} & Delete signature \\
+DELETE & /signatures/all & Delete all signatures \\
+\midrule
+GET & /history & Get scan history \\
+DELETE & /history & Clear scan history \\
+GET & /stats & Get dashboard statistics \\
+\midrule
+GET & /quarantine & List quarantined files \\
+GET & /quarantine/\{hash\} & Get quarantine details \\
+POST & /quarantine & Add to quarantine \\
+POST & /quarantine/\{hash\}/restore & Restore file \\
+DELETE & /quarantine/\{hash\} & Delete from quarantine \\
+DELETE & /quarantine & Clear all quarantine \\
+GET & /quarantine/stats/count & Get quarantine count \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{User Manual}
+
+\subsection{Installation}
+
+\subsubsection{Desktop CLI}
+
+\begin{lstlisting}[style=jsonstyle, caption={Desktop CLI Installation}]
+# Navigate to desktop directory
+cd desktop
+
+# Create virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+.\venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Verify installation
+python main.py --help
+\end{lstlisting}
+
+\subsubsection{Backend API}
+
+\begin{lstlisting}[style=jsonstyle, caption={Backend API Installation}]
+# Navigate to backend directory
+cd backend
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+.\venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# API available at http://localhost:8000
+# Documentation at http://localhost:8000/docs
+\end{lstlisting}
+
+\subsubsection{Web Frontend}
+
+\begin{lstlisting}[style=jsonstyle, caption={Web Frontend Installation}]
+# Navigate to web directory
+cd web
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Open http://localhost:5173
+\end{lstlisting}
+
+\subsubsection{Mobile App}
+
+\begin{lstlisting}[style=jsonstyle, caption={Mobile App Installation}]
+# Navigate to mobile directory
+cd mobile
+
+# Install dependencies
+npm install
+
+# Start Expo development server
+npx expo start
+
+# Scan QR code with Expo Go app
+\end{lstlisting}
+
+\subsection{Usage Examples}
+
+\subsubsection{Basic Scanning}
+
+\begin{lstlisting}[style=jsonstyle, caption={Basic Scanning Examples}]
+# Scan a single file
+python main.py scan suspicious.exe
+
+# Scan all file types (not just executables)
+python main.py scan document.pdf --all
+
+# Scan entire directory
+python main.py scan C:\Downloads
+
+# Get JSON output for automation
+python main.py scan file.exe --json
+\end{lstlisting}
+
+\subsubsection{Signature Management}
+
+\begin{lstlisting}[style=jsonstyle, caption={Signature Management Examples}]
+# Import sample signatures
+python main.py import ../data/sample_signatures.json
+
+# Add custom signature
+python main.py add malware.exe "Custom.Malware" --severity high
+
+# List all signatures
+python main.py list
+
+# Export signatures
+python main.py export my_signatures.json
+\end{lstlisting}
+
+\subsubsection{Quarantine Operations}
+
+\begin{lstlisting}[style=jsonstyle, caption={Quarantine Examples}]
+# List quarantined files
+python main.py quarantine list
+
+# Restore a file
+python main.py quarantine restore abc123def
+
+# Restore to specific location
+python main.py quarantine restore abc123 --to /safe/location/
+
+# Delete from quarantine
+python main.py quarantine delete abc123
+
+# Clear all quarantine
+python main.py quarantine clear
+\end{lstlisting}
+
+\subsection{Configuration}
+
+\subsubsection{Configuration Paths}
+
+\begin{table}[h]
+\centering
+\caption{Configuration File Locations}
+\label{tab:config_paths}
+\begin{tabular}{@{}llp{5cm}@{}}
+\toprule
+\textbf{OS} & \textbf{Base Path} & \textbf{Files} \\
+\midrule
+Windows & \%APPDATA\%\textbackslash{}malguard\textbackslash{} & signatures.json, scan\_log.jsonl \\
+macOS & \textasciitilde{}/Library/Application Support/malguard/ & signatures.json, scan\_log.jsonl \\
+Linux & \textasciitilde{}/.config/malguard/ & signatures.json, scan\_log.jsonl \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Backend Configuration}
+
+Edit \texttt{backend/config.py} to customize:
+
+\begin{lstlisting}[style=pythonstyle, caption={Backend Configuration (config.py)}]
+# Database location
+DATABASE_PATH = "data/malguard.db"
+
+# CORS allowed origins
+CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+]
+
+# Maximum upload size (100 MB)
+MAX_UPLOAD_SIZE = 100 * 1024 * 1024
+\end{lstlisting}
+
+\subsection{Troubleshooting}
+
+\begin{description}
+    \item[YARA not loading] Ensure yara-python is installed: \texttt{pip install yara-python}
+    
+    \item[Database integrity error] The signature database may be corrupted. Delete \texttt{signatures.json} to reset.
+    
+    \item[CORS errors in web app] Verify backend CORS\_ORIGINS includes the web app URL.
+    
+    \item[Mobile app connection failed] Ensure backend is running and accessible from the mobile device's network.
+\end{description}

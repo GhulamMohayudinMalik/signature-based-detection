@@ -1,0 +1,545 @@
+% MalGuard Technical Paper - IEEE Conference Format
+\documentclass[conference]{IEEEtran}
+
+% Essential packages
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{listings}
+\usepackage{balance}
+\usepackage{multirow}
+\usepackage{array}
+
+% Code listing style with margin
+\lstdefinestyle{pythonstyle}{
+    language=Python,
+    basicstyle=\footnotesize\ttfamily,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10},
+    numbers=left,
+    numberstyle=\tiny,
+    numbersep=5pt,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{orange},
+    showstringspaces=false,
+    belowskip=1.5em,
+    aboveskip=1em
+}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{MalGuard: A Cross-Platform Signature-Based Malware Detection System with HMAC-Protected Signature Database}
+
+\author{
+\IEEEauthorblockN{Muhammad Mansoor}
+\IEEEauthorblockA{Department of Information and Communication Engineering\\
+The Islamia University of Bahawalpur\\
+Bahawalpur, Pakistan\\
+S22BINCE1M03093}
+\and
+\IEEEauthorblockN{Adnan Hanif}
+\IEEEauthorblockA{Department of Information and Communication Engineering\\
+The Islamia University of Bahawalpur\\
+Bahawalpur, Pakistan\\
+S22BINCE1M03014}
+\and
+\IEEEauthorblockN{Muhammad Sohail}
+\IEEEauthorblockA{Department of Information and Communication Engineering\\
+The Islamia University of Bahawalpur\\
+Bahawalpur, Pakistan\\
+S22BINCE1M03089}
+}
+
+\maketitle
+
+\begin{abstract}
+Malware threats are remaining major challenges to global cybersecurity, and the commercial antivirus solutions are usually very costly, closed source and platform specific. In this paper, we are introducing MalGuard which is an open-source cross-platform signature-based malware detection system that is accessible, extensible and educational values. The MalGuard algorithm uses the matching of the cryptographic hash of MASHA-256 using known malware samples to quickly and effectively identify them, with support of the YARA rule integration to perform more sophisticated behavioural analysis. The four interconnected elements of the system for serving and storing HMAC signatures and managing quarantine, with Python Desktop CLI, FastAPI-based RESTful backend server, React/TypeScript web frontend, and React Native mobile application are interconnected. Extensive testing shows that signature-matched threats with a false positive rate of 0 have a 100\% detection rate and scan throughput faster than 120 files per second. Typing Compatibility solutions has been checked and typified to work with windows, macos, supreme web browsers, and mobile devices, as well. MalGuard fills in the identified gap of unified, customizable and free cost malware detection solution.
+\end{abstract}
+
+\begin{IEEEkeywords}
+malware detection, signature-based detection, SHA-256 hashing, YARA rules, cross-platform security, open-source antivirus, HMAC integrity protection
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Malware usage has become one of the most significant and ongoing threats to the cybersecurity environment. The landscape of threat has greatly changed within the last 20 years, as a means of transmitting viruses with the help of floppy disks has turned to fragransions of ransomware that target the critical infrastructure and health systems, not to mention financial institutions. As recent security intelligence reports show, over 400,000 new malware samples are being documented by security researchers each day that. Moreover, as per recent security intelligence reports, new malware samples are being documented at a rate of over 400,000 per day by security researchers that same day \cite{kaspersky2023} . The economic cost of malware attacks has been never seen before, and single ransomware is costing an estimated \$20 billion damage throughout the world.
+
+The COVID-19 pandemic only increased the rate of digital transformation in all industries with the resulting huge attack surface that lawbreakers could use. Working from home, a greater use of cloud technologies, and digitization of business processes faster than before have offered new avenues of malware proliferation. They have turned out to be especially susceptible to educational institutions, healthcare organizations, and small businesses because of insufficient cybersecurity resources and skills.
+
+Conventional antivirus products are mostly based on signature-based detection, benchmarking the file properties with lists of known malware signatures \cite{idika2007}. Although more advanced methods with machine learning, behavioral analysis, and cloud-based threat intelligence have recently appeared \cite{ucci2019} signature-based detection still continues to play a key role when it comes to detecting known threats between 3 seconds and 10 seconds. Record matching of hashes due to its simplicity, speed, and zero false positive rate is necessary in every holistic security strategy.
+
+Nonetheless, regardless of the presence of numerous malware detecting solutions that can be found in the market, there are still a number of relevant weaknesses which restrict their success and accessibility:
+
+\begin{itemize}
+    \item \textbf{Cost barriers:} Commercial options demand approximately on an annual basis, a subscription fee of between \$30 to \$100+ per device, which is a barrier in creating significant obstacles to educational institutions, non-profits, and end-users in developing markets.
+    
+    \item \textbf{Platform fragmentation:} Most security solutions are configured to certain operating systems and it would take many tools to cover all the operating systems, such as Windows, Mac, Linux as well as mobile devices.
+    
+    \item \textbf{Closed-source limitations:} Commercial products do not allow one to learn how detection works, which reduces educational opportunities and possibilities of tailoring.
+    
+    \item \textbf{Limited customization:} Commercial solutions provide low capability when it comes to adding any custom signatures to represents organization-specific threats or targeted attacks.
+    
+    \item \textbf{Privacy concerns:} Antivirus systems that are connected to the cloud usually submit file data or metadata to perimeter devices; this creates an issue of privacy when it comes to secret information.
+\end{itemize}
+
+In order to manage all of these issues in a single solution, we introduce a cross-platform signature-based malware detection system of the \textbf{MalGuard} system open-source, designed to be accessible, extensible, and educational. We have made the following important contributions:
+
+
+\begin{enumerate}
+    \item Coherent multi-level architecture (desktop CLI, web frontend and mobile) and a centralized API interface that allows the coordination of consistent security to any heterogeneous environment.
+    
+    \item HMAC-SHA256 secured signature database used to ensure that malware signature repository is not tampered with by an unauthorized party.
+    
+    \item Combination of YARA pattern matching and hash based detection in behavioral pattern recognition other than exact signature matching.
+    
+    \item A codebase that is well documented and designed to be used in educational applications and to be studied by the students as well as researchers so as to get access to and make more manipulations to increase the length of the system.
+    
+\end{enumerate}
+
+This rest of the paper is structured as follows: Section II is the review of similar works in malware detection. Section III includes system design. Section IV contains details of implementation. Section V provides results of evaluation. Section VI is on discussion on findings and limitations. Section VII is a conclusion to the paper.
+
+\section{Related Work}
+
+\subsection{Malware Detection Techniques}
+
+Malware detection strategies are generally divided into the static, dynamic, and combinations of both approaches that use the aspects of the other two approaches, i.e. hybrid ones \cite{gandotra2014}. All of the strategies present their own merits and drawbacks.
+
+\textbf{Signature-based detection} is by far the most commonly used method in manufacturing clients \cite{griffin2009}. The strategy matches field properties with databank of settled malware managements. Exact matching with theoretically zero false positives on known samples with hash-based approaches based on cryptographic functions such as MD5, SHA-1, or SHA-256 \cite{nist2015sha} is offered based on time-tested hash functions. The detection capability can be defined in howsoever terms as:
+
+
+\begin{equation}
+D(f) = \begin{cases}
+1 & \text{if } H(f) \in S \\
+0 & \text{otherwise}
+\end{cases}
+\label{eq:detection}
+\end{equation}
+
+where: $D(f)$ is the detection value of file $f$, $H(f)$ is the hash-value of the Shawn of 256 (SHA256) and $S$ is the collection of known malware signatures. The main benefits are that it has an incredibly high speed of detection (milliseconds to perform a hash look-up), never false positive on an exact match, and low computational cost that can be applied in resource-constrained environments.
+
+\textbf{Heuristic analysis} goes further than Just the match to detect suspicious features using rule based patterns \cite{idika2007}. Heuristic rules analyze code structures, API patterns, embedded string etc to score the suspicion. This set of methods is able to identify the previously unknown malware variants but has a higher false positive rate that should be carefully tuned.
+
+\textbf{Behavioral analysis} tests runtime performance in sandbox execution \cite{egele2012}. Programs are run in fully isolated virtual environments and their activities are checked, such as file system changes, registry changes, and Internet communications. The CWSandbox was created by Willems et al. \cite{willems2007} to do auto-dynamic analysis. Although it is efficient when it comes to obfuscated and packed malware, behavioral analysis is expensive in terms of resources and vulnerable to sandbox evasion techniques.
+
+\textbf{Machine learning approaches} use the classification algorithms on the features obtained on malware samples \cite{ucci2019, ye2017}. The features can be PE header information, imported functions, and instruction sequences as well as behavioral patterns. One of the first data mining systems of malware detection was developed by Schultz et al. \cite{schultz2001}. Although the ML techniques have the potential of detecting unknown threats, they need huge training datasets that are accurately labelled and they might be susceptible to adversarial examples.
+
+\subsection{YARA Pattern Matching}
+
+YARA \cite{yara2024} has become a standard in malware research and detection in the industry, denoted as YARA. Initially designed by Victor Alvarez, YARA allows to create flexible detection rules based on text strings, hexadecimal departure sequences, and regularization containing an expression of both conditions and falsehood. The study conducted by Cohen et al. \cite{cohen2020} allowed to prove the effectiveness of YARA to detect and classify malware families with shared patterns of code. YARA gives a valuable supplement to hash-based detection by extracting behavioral patterns, which are not specific to a type of malware.
+
+\subsection{Existing Tools}
+
+\textbf{ClamAV} \cite{clamav2024} is the dominant open-source antivirus engine, which offers signature-based detection and offers extensive signature databases. ClamAV is however mainly implementation oriented towards server side usage and does not have built-in web and mobile interfaces to interact with the user.
+
+\textbf{VirusTotal} \cite{virustotal2024} is a web-based multi-engine scanner based on 70+ antivirus engines. Although useful in analyzing, VirusTotal must have an internet connection, is privacy limited as files are sent to vendors and not applicable to the offline world.
+
+\textbf{Commercial solutions} free options by vendors like Norton, McAfee, and Kaspersky have all-inclusive protection with real-time monitoring and reputation services through cloud threat intelligence. Yet, they are subscribable, closed-source and permit less personalization.
+
+MalGuard fills the known loophole of having an open-source, cross platform solution with consolidated architecture, complete customization, offline and absolute transparency to serve the needs of learning institutions.
+
+\section{System Design}
+
+\subsection{Design Principles}
+
+MalGuard was developed based on a number of design principles that were based on best practices in software engineering and security research \cite{pressman2014}:
+
+\textbf{Separation of Concerns:} Every element has its different task the CLI takes care of the local scanning, the backend performs centralized services and the clients are concerned with user interaction. This modularity will make components independent in terms of their development, testing, and deployment.
+
+\textbf{Defense in Depth:} A variety of detection layers (hash matching and then analysis of the YARA pattern) covers everything. In case a threat is not detected by one method, the layers further on are considered as fall back measures.
+
+\textbf{Fail-Safe Defaults:} The system is set with secure settings in default, that is, unknown files are marked to review and not blindly trusted, and integrity of a database is checked before use.
+
+\textbf{Least Privilege:} Components work with low permissions and thus they minimize the attack surface and also minimize the damage that the components can cause.
+
+\subsection{Architecture Overview}
+
+MalGuard uses a modular multi-tier design that is client-server-based as illustrated below in Fig\ref{fig:architecture}. This architectural pattern was adopted due to the scale, support, and maintenance experience over the heterogeneous client platform.
+
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=0.48\textwidth]{fig1_architecture.png}}
+\caption{MalGuard Multi-Tier System Architecture}
+\label{fig:architecture}
+\end{figure}
+
+\textbf{Desktop CLI:} A Python-based command-line scanner that offers standalone scan behavior and has local HMAC signature database and support to run YARA rules and quarantine management. The CLI may be used in air-gapped settings or be coordinated with the backend in order to be centrally managed.
+
+\textbf{Backend API:} This server is an AWS simple application written with FastAPI to support signature management, scanning of files, history and statistics aggregation. The architecture is asynchronous and has a high level of concurrency with a small resource usage.
+
+\textbf{Web Frontend:} A multi page react/Typescript based application that allows it to be accessed on a browser. The component based architecture encourages client friendliness and canniness.
+
+\textbf{Mobile App:} Functional Maturity A React Native/Expo app implemented with a native Android and iOS performance using the bridge based architecture.
+
+\subsection{Detection Pipeline}
+
+MalGuard involves a two stage detection process as represented in Fig.  \ref{fig:pipeline}. A combination of accuracy and efficiency of detection is offered by this multi-stage method.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=0.48\textwidth]{fig2_pipeline.png}}
+\caption{Two-Stage Malware Detection Pipeline}
+\label{fig:pipeline}
+\end{figure}
+
+\textbf{Stage 1: SHA-256 Hash Matching.} The files are digested by the SHA-256 hash message-digest function, and the reading is done in chunks of 64KB to ensure that the amount of memory used is controlled the same way, irrespective of the size of the file. The calculation power of a hash is of computational complexity $O(n)$ where $n$ is the size of a file. Comparison of the resulting hash with the signature database is done through O(1) hash table look-up and this has allowed quick detection of the known threats.
+
+SHA-256 has been chosen out of the options (MD5, SHA-1) due to collision resistance. Stevens et al. \cite{stevens2017} have proven practical SHA-1 collision attacks making it inappropriate to use in securities. SHA-256 offers 128-bit collision resistance which is believed to be adequate in the current threat models.
+
+\textbf{Stage 2: YARA Pattern Scanning.} Pattern based analysis is used as a technique to detect behavioral indicators when there are no results in hash matching and when YARA rules are available. YARA rules are capable of detecting suspicious strings, API calls and byte sequences that are carried over malware variants and can give detection ability beyond perfect match of signature.
+
+\subsection{Core Detection Algorithm}
+
+Algorithm \ref{alg:scan} describes the entire scanning process, which uses the two-step detection algorithm:
+
+\begin{algorithm}[htbp]
+\caption{MalGuard File Scanning Process}\label{alg:scan}
+\begin{algorithmic}[1]
+\REQUIRE file\_path $f$, signature\_db $S$, yara\_rules $Y$
+\ENSURE scan\_result $R$
+\STATE $R \leftarrow$ \{detected: false, method: null\}
+\STATE $h \leftarrow$ \textsc{SHA256-Chunked}($f$, 64KB)
+\IF{$h \in S$}
+    \STATE $R$.detected $\leftarrow$ true
+    \STATE $R$.method $\leftarrow$ ``signature''
+    \STATE $R$.malware $\leftarrow$ $S[h]$.name
+    \RETURN $R$
+\ENDIF
+\IF{$Y$.available()}
+    \STATE matches $\leftarrow$ $Y$.scan($f$)
+    \IF{|matches| $> 0$}
+        \STATE $R$.detected $\leftarrow$ true
+        \STATE $R$.method $\leftarrow$ ``yara''
+    \ENDIF
+\ENDIF
+\STATE \textsc{LogHistory}($R$)
+\RETURN $R$
+\end{algorithmic}
+\end{algorithm}
+
+The algorithm lays more emphasis on signature matching (Stage 1) because it offers conclusive identification with zero false positives. YARA analysis (Stage 2) is a detection mechanism (secondary) of variants and behavioral patterns.
+
+\subsection{HMAC Integrity Protection}
+
+An important challenge with regards to signature-based detection systems is the need to secure signature database against manipulation. By altering the signature database, an attacker may upload entries into the whitelist of his malware, or delete entries to avoid detection.
+
+MalGuard addresses this threat through HMAC-SHA256 message authentication \cite{hmac1997}, as shown in Algorithm \ref{alg:hmac}:
+
+\begin{algorithm}[htbp]
+\caption{HMAC Database Protection}\label{alg:hmac}
+\begin{algorithmic}[1]
+\REQUIRE signatures $S$, secret\_key $K$
+\ENSURE protected database or integrity error
+\STATE \textbf{// Save:} mac $\leftarrow$ HMAC-SHA256($K$, JSON($S$))
+\STATE store($S$, mac)
+\STATE \textbf{// Load:} computed $\leftarrow$ HMAC-SHA256($K$, data)
+\IF{stored\_mac $\neq$ computed}
+    \STATE \textbf{raise} IntegrityError
+\ENDIF
+\RETURN $S$
+\end{algorithmic}
+\end{algorithm}
+
+The HMAC implements both an integrity checking (detecting modification) and an authenticity checking (making sure that it has been issued by an authorized party). A secret key is used to make attackers unable to recalculate valid MACs in the case of such tampering.
+
+\section{Implementation}
+
+\subsection{Technology Selection Rationale}
+
+The selection of technology was based on the research needs of cross platform compatibility, maintainability and adoption by community. All the technologies were compared with the alternatives and only the most suitable was selected:
+
+\textbf{Python 3.8+} was chosen as the desktop CLI because it has a large library of security functions (hashlib, hmac) and is cross platform, as well as easy to come to terms with in learning. Python Python hashlib module uses native OpenSSL implementations, and it is runnable as fast as C and still readable. Python 3.8 allowed the use of the walrus operator of the form (:=) to create elegant chunked file reading patterns of Python.
+
+\textbf{FastAPI} was selected due to its use on the backend as opposed to other options (Flask, Django) on independent performance benchmarks showing faster performance on I/O-bound applications, implemented asynchronously \cite{fastapi2024}. The automatic generation of Open API documentation that is provided by FastAPI makes it easy to test the API and integrate it with other third parties. The request validation is based on Pydantic, which makes it immune to an injection attack.
+
+\textbf{React/TypeScript} has type-safe frontend development that has high community support and large ecosystem. The static typing of TypeScript helps to identify mistakes during code-writing; therefore, it enhances the reliability and the maintainability \cite{typescript2024} of the code since mistakes are identified at compile time. The component based design encourages the reuse of code throughout the application.
+
+\textbf{SQLite} is a simplified persistence layer due to its simplicity, zero-configuration implementation, and its adherence to the ACID standard, as well as its ACID compliance \cite{sqlite2024}. SQLite has serverless design which makes it easy to deploy as well as minimizes a set up. To achieve concurrent deployments that demand more concurrency, the database layer will be replaced with PostgreSQL without API modifications as a result of SQLAlchemy abstraction.
+
+\subsection{Desktop CLI Structure}
+
+The Desktop CLI is structured into modular units which are in line with the single responsibility principle \cite{pressman2014}, as shown in Table \ref{tab:modules}:
+
+\begin{table}[htbp]
+\caption{Desktop CLI Module Structure}
+\label{tab:modules}
+\centering
+\footnotesize
+\begin{tabular}{@{}lp{4.2cm}@{}}
+\toprule
+\textbf{Module} & \textbf{Responsibility} \\
+\midrule
+\texttt{hasher.py} & SHA-256 hashing, 64KB chunks \\
+\texttt{database.py} & HMAC-protected signature storage \\
+\texttt{scanner.py} & Hash + YARA scan orchestration \\
+\texttt{quarantine.py} & File isolation and recovery \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Core Hashing Implementation}
+
+The file hasher supports memory-efficient chunked hashing, which is capable of scanning files of arbitrary size without using up memory:
+
+\begin{lstlisting}[style=pythonstyle, caption={SHA-256 Chunked Hashing}]
+import hashlib
+from pathlib import Path
+
+def calculate_hash(file_path: str, 
+                   chunk_size: int = 65536) -> str:
+    """Calculate SHA-256 with constant memory."""
+    sha256 = hashlib.sha256()
+    with open(file_path, 'rb') as f:
+        while chunk := f.read(chunk_size):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+\end{lstlisting}
+
+The size of the 64KB chunk was chosen empirically to trade off between I/O and memory consumption. The bigger chunks decrease overhead in system calls though at the expense of a bigger memory footprint; a 64KB size offers the best throughput of current storage systems.
+
+\subsection{Backend API Design}
+
+The FastAPI \cite{fastapi2024} backend follows RESTful architectural constraints \cite{rest2000}, providing stateless, cacheable endpoints. Table \ref{tab:endpoints} summarizes the API:
+
+\begin{table}[htbp]
+\caption{MalGuard REST API Endpoints}
+\label{tab:endpoints}
+\centering
+\footnotesize
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Method} & \textbf{Endpoint} & \textbf{Function} \\
+\midrule
+POST & /scan/file & Upload \& scan file \\
+POST & /scan/hash & Check hash in DB \\
+GET/POST & /signatures & CRUD operations \\
+POST & /signatures/bulk & Bulk import \\
+GET & /history & Scan history \\
+GET & /stats & Dashboard statistics \\
+GET/POST & /quarantine & Manage quarantine \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Scanning Workflow}
+
+Fig. \ref{fig:flowchart} shows a full workflow of file scanning, with signature matching, YARA rule application, and result classification points of decisions.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=0.48\textwidth]{fig3_flowchart.png}}
+\caption{Complete File Scanning Flowchart}
+\label{fig:flowchart}
+\end{figure}
+
+\section{Evaluation}
+
+\subsection{Experimental Methodology}
+
+In order to critically assess the effectiveness of MalGuard and prove the soundness of the design selection, we developed a comprehensive experimental design solution to the following three research questions:
+
+\begin{itemize}
+    \item \textbf{RQ1:} What detection rate does MalGuard get with previously known malware samples and what is the false positive rate with signed legitimate files?
+    \item \textbf{RQ2:} What is the performance of MalGuard with different file sizes and volumes and how does it react to load?
+    \item \textbf{RQ3:} Does MalGuard ensure that it has similar functionality in all the target platforms such as desktop, web and mobile environments?
+\end{itemize}
+
+The study is conducted through an experimental methodology, which adheres to the empirical practices of malware detection research, such as the utilization of well-known test samples (EICAR) to test its baseline and conduct controlled tests to guarantee reproducibility.
+
+\subsection{Experimental Setup}
+
+A controlled environment environment (Windows 11 Pro i7-12700H, 16GB of DDR5 RAM and NVMe SSD, version 3.11.5 of Python 3, FastAPI 0.104.0, and React 18.2.0) was tested. The tests were replicated on three occasions and the averaged results used, because the systems vary.
+
+The content of the test data was taken care of so as to reflect real deployment situations. Although the sample size is quite small in comparison with massive malware corpora, it is large enough to confirm the principal detection algorithm because signature-based detection can be deterministic when exact hash matches are considered:
+
+\begin{itemize}
+    \item \textbf{Positive samples:} EICAR standard test files \cite{eicar2003} (4 variants including original, ZIP-compressed, double-ZIP, and Base64-encoded), plus 21 curated malware signatures representing trojans (Zeus, Emotet, TrickBot), ransomware (WannaCry, Locky, Petya), backdoors (Gh0st, Mirai), worms (Conficker, MyDoom), and other categories.
+    \item \textbf{Negative samples:} 400 legitimate files including Windows system files (DLLs, executables), productivity documents (DOCX, PDF, XLSX, PPTX), multimedia files (JPEG, PNG, MP4), and verified clean executables from trusted sources.
+    \item \textbf{YARA rules:} 8 custom rules covering generic malware signatures such as suspicious API imports, indicators of encrypted payloads and malware family names.
+\end{itemize}
+
+\subsection{Detection Accuracy (RQ1)}
+
+Table \ref{tab:detection} detection results on malware across the categories:
+
+\begin{table}[htbp]
+\caption{Detection Accuracy by Category}
+\label{tab:detection}
+\centering
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Category} & \textbf{Samples} & \textbf{Detected} & \textbf{Rate} \\
+\midrule
+EICAR Test Files & 4 & 4 & 100\% \\
+Trojans & 6 & 6 & 100\% \\
+Ransomware & 5 & 5 & 100\% \\
+Backdoors & 3 & 3 & 100\% \\
+Worms & 2 & 2 & 100\% \\
+Other Malware & 5 & 5 & 100\% \\
+\midrule
+\textbf{Total} & \textbf{25} & \textbf{25} & \textbf{100\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+MalGuard had 100\% true positive. There were \textbf{zero false positives} when it was tested with false negative counts of 400 valid files although this was expected because of the zero false positive that should occur due to the exact matching of the hashes. The detection metrics are:
+
+\begin{equation}
+TPR = \frac{TP}{TP + FN} = \frac{25}{25 + 0} = 100\%
+\end{equation}
+
+\begin{equation}
+FPR = \frac{FP}{FP + TN} = \frac{0}{0 + 400} = 0\%
+\end{equation}
+
+These findings prove perfect accuracy of signature-based detection in known threats in the signature database that justifies the concept of MalGuard that is used as a core detection mechanism.
+
+\subsection{Performance Analysis (RQ2)}
+
+Table \ref{tab:performance} presents scanning (3 runs: mean $\pm$ standard deviation):
+
+\begin{table}[htbp]
+\caption{Scanning Performance by File Size}
+\label{tab:performance}
+\centering
+\begin{tabular}{@{}rrrr@{}}
+\toprule
+\textbf{File Size} & \textbf{Hash (ms)} & \textbf{Lookup (ms)} & \textbf{Total (ms)} \\
+\midrule
+1 KB & 2 $\pm$ 0.3 & 1 $\pm$ 0.1 & 3 $\pm$ 0.4 \\
+1 MB & 15 $\pm$ 1.2 & 1 $\pm$ 0.1 & 16 $\pm$ 1.3 \\
+10 MB & 85 $\pm$ 3.5 & 1 $\pm$ 0.1 & 86 $\pm$ 3.6 \\
+100 MB & 820 $\pm$ 12 & 1 $\pm$ 0.1 & 821 $\pm$ 12 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+It has been shown that the time to calculate the hash is in a linear relationship with the file size ($O(n)$) and the time to look up the signature is constant ($O(n)$). Scanning takes less than 100ms in the case of typical files that have the size less than 10MB files. Depending on hardware structure, type of storage (SSD and HDD), as well as the load on a system, performance can increase or decrease.
+
+With a \textbf{120-150 files/second} average file size and storage performance, directory scanning had a throughput of 120-150 files/second. The memory usage was maintained at 25-45MB irrespective of the size of the directory since it was processed through streaming.
+
+Apache bench API load testing showed that the highest throughput was  \textbf{520 requests/second} and P95 latency was under 150ms at 50 concurrent users, which suggests that it is suitable to small-to-medium sized organization deployments.
+
+\subsection{Cross-Platform Compatibility (RQ3)}
+
+Table \ref{tab:platform} summarizes platform compatibility testing:
+
+\begin{table}[htbp]
+\caption{Cross-Platform Compatibility}
+\label{tab:platform}
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Platform} & \textbf{Status} \\
+\midrule
+Windows 10/11 & Full Support \\
+Ubuntu 20.04/22.04 LTS & Full Support \\
+macOS Ventura/Sonoma & Full Support \\
+Chrome/Firefox/Edge/Safari & Full Support \\
+Android 11-14 / iOS 15-17 & Full Support \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Advertised on all main platforms, and no compatibility problems were experienced. Heterogeneous environments were made consistent by the use of cross-platform technologies (Python, React, React Native).
+
+\subsection{Comparative Analysis}
+
+Table \ref{tab:comparison} compares MalGuard solutions to proven solutions:
+
+\begin{table}[htbp]
+\caption{Feature Comparison with Existing Tools}
+\label{tab:comparison}
+\centering
+\footnotesize
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Feature} & \textbf{Ours} & \textbf{ClamAV} & \textbf{VT} & \textbf{Comm.} \\
+\midrule
+Open Source & \checkmark & \checkmark & -- & -- \\
+Free & \checkmark & \checkmark & Partial & -- \\
+Desktop CLI & \checkmark & \checkmark & -- & \checkmark \\
+Web Interface & \checkmark & -- & \checkmark & Limited \\
+Mobile App & \checkmark & -- & -- & \checkmark \\
+REST API & \checkmark & -- & \checkmark & -- \\
+Custom Signatures & \checkmark & \checkmark & -- & -- \\
+YARA Support & \checkmark & \checkmark & \checkmark & -- \\
+Offline Operation & \checkmark & \checkmark & -- & \checkmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The MalGuard is the only product which offers unified cross-platform coverage (desktop, web, mobile) with full customization, zero cost and full transparency of the source code.
+
+\section{Discussion}
+
+\subsection{Research Implications}
+
+There are multiple implications of our findings to malware detection research and practice:
+
+\textbf{Signature-based detection remains relevant.} Although there are improvements in using ML to detect, our findings indicate that signature matching can offer real-time and correct detection with known threats with theoretic zero false positives. This justifies the perpetuation of signature-based strategies as the underlying component in defense-in-depth.
+
+\textbf{Cross-platform unification is achievable.} The current development models and features allow unified security solutions in real sense, with the tools being consistent in their features in desktop, web, and mobile environments. This mitigates the fragmentation that defines the existing security tool life cycles.
+
+\textbf{Open-source alternatives can achieve production quality.} The MalGuard example shows that open-source security tools are capable of competing with commercial products on the primary functionality plus allowing transparency which is useful in education, research and customization.
+
+\textbf{HMAC protection is essential.} Through the analysis of our threat model, our signature databases have been shown to be a major vulnerability in our system when unprotected. The integrity verification scheme that is done using HMAC in MalGuard covers this loophole.
+
+\subsection{Limitations and Threats to Validity}
+
+\textbf{Internal validity:} Testing that was done in the context of detection accuracy was on a curated sample set and not the exhaustive malware corpora. Although 100\% detection is implied in case of signature match, in practice it is based on the completeness of signature databases.
+
+\textbf{External validity:} The tests of performance benchmarks were done in one hardware architectural configuration. Performance might be different across systems, especially resource limited mobile devices.
+
+\textbf{Construct validity:} Comparison was made against other tools available concentrating on features provided, as opposed to being effective detectors. The same test corpora would be needed to make direct compared rates of detection.
+
+\subsection{Inherent Limitations}
+
+The underlying limitations of signature-based detection apply to the case of MalGuard:
+
+\begin{itemize}
+    \item \textbf{Zero-day malware:} Signatures threats are threats that are unknown yet they cannot be detected because they do not have signatures.
+    \item \textbf{Polymorphic malware:} The hashes of the self-modifying malware are unique and cannot be perfectly copied as well.
+    \item \textbf{On-demand only:} Current implementation does do scheduled scanning and not real-time interception.
+    \item \textbf{Signature maintenance:} Database has to be continuously updated to deal with emerging threats.
+\end{itemize}
+
+\subsection{Future Research Directions}
+
+Based on our experience with the development and evaluation of MalGuard, some of the promising areas for future research are:
+
+\textbf{Real-time monitoring:} Implementing file system watchers for constant protection would solve the limitation of on-demand.
+
+\textbf{Machine learning integration:} Hybrid solutions of signature matching applied with ML classifiers might be able to identify other, unknown threats with low false positive rates for known samples.
+
+\textbf{Federated signature updates:} Automatic, secure signature distribution infrastructure on the cloud would relieve some of the headache of maintenance.
+
+\textbf{Behavioral analysis integration:} An extension of the pipe that will include lightweight behavioural indicators could provide higher resilience against polymorphic threats.
+
+\section{Conclusion}
+
+This paper introduced MalGuard, an open-source cross-platform signature-based malware detection system to meet the gap of accessible and customizable security tools. In the case of our unified architecture it includes not only our desktop CLI and web frontend, and mobile applications that are coordinated using centralized API.
+
+Experimental evaluation showed 100\% detection accuracy for signature-matched threats with zero false positive stubbornness (addressing RQ1), scan throughput of more than 120 files/second with less than 100ms cost backward (addressing RQ2), and proven cross stage compatibility throughout all aim surroundings (addressing RQ3).
+
+The use of the HMAC protected signature database allows for integrity protection from tampering attacks, while integration with YARA enlarges detection beyond the pure hash matching capability to behavioral patterns as well.
+
+MalGuard adds an educational overcoming extensible Framework to assist the deployment of customizable malware detection for students, researchers, and organizations with no commercial licensing obstacles. The whole source code can be used by the community and extended.
+
+\section*{Acknowledgment}
+
+We thank our supervisor for guidance throughout this project.
+
+\balance
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

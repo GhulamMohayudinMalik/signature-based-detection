@@ -1,0 +1,301 @@
+\documentclass[11pt,a4paper]{report}
+
+% Essential packages
+\usepackage{amsmath, amssymb, amsthm} % AMS Packages
+\usepackage{graphicx,color}           % Packages for graphics and color
+\usepackage[left=1.5in, right=1in, top=1in, bottom=1in, includefoot, headheight=13.6pt]{geometry}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\setlist[description]{
+    style=nextline,
+    labelwidth=0pt,
+    leftmargin=15pt,
+    itemindent=\dimexpr-5pt-\labelsep\relax
+}
+
+\usepackage{tikz,pgfplots}
+\usetikzlibrary{positioning,shadows, arrows,trees, shapes,fit}
+\usetikzlibrary{patterns}
+\tikzset{
+  basic/.style  = {draw, text width=2cm, drop shadow, font=\sffamily, rectangle},
+ root/.style   = {basic, rounded corners=2pt, thin, align=center, top color=blue!20,bottom color=white},
+  level 2/.style = {basic, rounded corners=6pt, thin,align=center, top color=green!20,bottom color=white,                    text width=8em},
+  level 3/.style = {basic, thin, align=left, top color=red!30,bottom color=white, align=center, text width=8em},
+  level 4/.style = {basic, thin, align=left, fill=yellow!40, align=center, text width=6.5em}
+}
+\pgfplotsset{width=10cm,compat=1.9}
+\pgfdeclarepatternformonly[\LineSpace]{my north east lines}{\pgfqpoint{-1pt}{-1pt}}{\pgfqpoint{\LineSpace}{\LineSpace}}{\pgfqpoint{\LineSpace}{\LineSpace}}%
+{
+    \pgfsetlinewidth{0.4pt}
+    \pgfpathmoveto{\pgfqpoint{0pt}{0pt}}
+    \pgfpathlineto{\pgfqpoint{\LineSpace + 0.1pt}{\LineSpace + 0.1pt}}
+    \pgfusepath{stroke}
+}
+\newdimen\LineSpace
+\tikzset{
+    line space/.code={\LineSpace=#1},
+    line space=3pt
+}
+\newlength\figureheight
+\newlength\figurewidth
+\setlength\figureheight{1.9in}
+\setlength\figurewidth{2.6in}
+
+\setcounter{secnumdepth}{5}
+\setcounter{tocdepth}{5} 
+
+
+\usepackage{listings}
+\definecolor{vgreen}{RGB}{104,180,104}
+\definecolor{vblue}{RGB}{49,49,255}
+\definecolor{vorange}{RGB}{255,143,102}
+
+% Code listing style for Python
+\lstdefinestyle{pythonstyle}{
+    language=Python,
+    basicstyle=\small\ttfamily,
+    keywordstyle=\color{vblue},
+    identifierstyle=\color{black},
+    commentstyle=\color{vgreen},
+    stringstyle=\color{vorange},
+    numbers=left,
+    breaklines=true,
+    numberstyle=\tiny\color{black},
+    numbersep=10pt,
+    tabsize=4,
+    showstringspaces=false,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+% Code listing style for JSON
+\lstdefinestyle{jsonstyle}{
+    basicstyle=\small\ttfamily,
+    numbers=left,
+    breaklines=true,
+    numberstyle=\tiny\color{black},
+    numbersep=10pt,
+    tabsize=2,
+    showstringspaces=false,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+\lstset{style=pythonstyle}
+ 
+\usepackage{mathtools}
+% Optional customization packages
+\usepackage{lmodern}                  % Custom fonts
+\usepackage[T1]{fontenc}              % Ensure correct font encoding
+
+\usepackage{url}
+
+\usepackage[hang, small, bf, margin=0pt, tableposition=bottom]{caption}
+\setlength{\abovecaptionskip}{10pt}   % Custom captions
+\graphicspath{{./img/}}
+
+
+% Page layout
+\parindent 0pt
+\parskip 1ex
+\renewcommand{\baselinestretch}{1.49}
+\numberwithin{equation}{section}
+\renewcommand{\bibname}{References}
+\renewcommand{\contentsname}{Contents}
+\pagenumbering{roman}
+
+\newcommand{\acrolabel}[1]{\makebox[3cm][l]{\textbf{#1}}}
+\newenvironment{acronyms}{\begin{list}{}{\renewcommand{\makelabel}{\acrolabel}}}{\end{list}}
+
+% Customising headers - fancyhdr.pdf
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\rhead{}
+\lhead{\nouppercase{\textsc{\leftmark}}}
+\renewcommand{\headrulewidth}{0pt}
+\makeatletter
+\renewcommand{\chaptermark}[1]{\markboth{\textsc{\@chapapp}\ \thechapter:\ #1}{}}
+\makeatother
+
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert} 
+
+% Customising chapter headings - sectsty.pdf
+\usepackage{sectsty}
+\chapterfont{\Large\sc\centering}
+\chaptertitlefont{\centering}
+
+% Hyperreferencing and citations
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=blue,
+    filecolor=blue,
+    linkcolor=blue,
+    urlcolor=blue
+}
+
+% Section symbol
+\usepackage{cleveref}
+\crefname{section}{\S}{\S\S}
+\Crefname{section}{\S}{\S\S}
+\crefname{subsection}{\S}{\S\S}
+\Crefname{subsection}{\S}{\S\S}
+
+% Actual document
+\begin{document}
+
+    % Titlepage
+\newpage
+\pdfbookmark[0]{Main Title}{maintitle}
+\begin{titlepage}
+    \centering
+    \vspace{1cm}
+    \LARGE{\textbf{MalGuard: A Cross-Platform Signature-Based Malware Detection System}} \\ [0.5cm]
+    
+    \begin{figure}[h]
+        \centering
+        \includegraphics[scale=0.8]{img/iub.png}
+    \end{figure}
+    
+    \vspace{0.5cm}
+    \Large\textbf{Authors:} \\ [0.5 cm]
+    \begin{tabular}{l c}
+        Muhammad Mansoor & S22BINCE1M03091 \\
+        Adnan Hanif & S22BINCE1M03031 \\
+    \end{tabular}
+    \\[0.5cm]
+    
+    \Large{Supervisor} \\
+    \Large{\textbf{Khan Bahadur Khattak}} \\[1.5cm]
+    
+    \large{A final year project report submitted in partial fulfillment of the requirements for the degree of}\\ [0.75cm]
+    
+    \Large{\textbf{B.S. Computer Engineering}} \\
+    
+    \Large{Department of Information and Communication Engineering \\
+    Faculty of Engineering and Technology \\
+    The Islamia University of Bahawalpur, Pakistan} \\ [0.75 cm]
+    
+    \Large{\textbf{December 2024}}
+\end{titlepage}
+
+
+    \pagenumbering{roman}
+    \pdfbookmark[0]{Declaration}{declaration}
+    \chapter*{Undertaking}
+    \addcontentsline{toc}{section}{Declaration of Originality}{}
+
+    We certify that the research work titled "\textit{MalGuard: A Cross-Platform Signature-Based Malware Detection System}" is our own work. The work has not been presented elsewhere for assessment. Where material has been used from other sources it has been properly acknowledged. 
+
+    \begin{flushright}
+        \line(1,0){125} \\
+        Muhammad Mansoor
+    \end{flushright}
+    \begin{flushright}
+        \line(1,0){125} \\
+        Adnan Hanif
+    \end{flushright}
+
+\newpage
+\chapter*{Certificate}
+\addcontentsline{toc}{section}{Certificate}{}
+We approve the final year project titled "\textit{MalGuard: A Cross-Platform Signature-Based Malware Detection System}" submitted by Muhammad Mansoor (S22BINCE1M03091) and Adnan Hanif (S22BINCE1M03031) in partial fulfillment of the requirements for the degree of B.S. Computer Engineering.
+\\
+\\
+\\
+\\
+\\
+\noindent\underline{\hspace{5cm}}\\
+\noindent Khan Bahadur Khattak (Supervisor)
+\qquad \qquad \qquad \qquad\qquad \qquad \qquad \qquad\qquad \qquad
+\noindent
+\\
+\\
+\\
+\underline{ \qquad\qquad\quad\qquad\qquad\qquad\qquad\qquad\qquad}
+\\
+External Examiner
+\\
+\\
+\\
+\noindent
+\underline{\qquad\qquad\qquad\qquad\qquad}
+\\
+\noindent Chairman, Department of ICE
+
+    \newpage
+    \pdfbookmark[0]{Abstract}{abstract}
+    \chapter*{Abstract}
+    \addcontentsline{toc}{section}{Abstract}{}
+
+Malware threats have become one of the most significant challenges in cybersecurity, affecting individuals, organizations, and critical infrastructure worldwide. Traditional commercial antivirus solutions, while effective, are often expensive, closed-source, and platform-specific, limiting their accessibility for educational institutions and small organizations.
+
+This thesis presents \textbf{MalGuard}, a comprehensive cross-platform signature-based malware detection system designed to address these limitations. MalGuard employs SHA-256 cryptographic hash matching for rapid and accurate detection of known malware samples, complemented by YARA rule integration for advanced pattern-based behavioral analysis.
+
+The system implements a modular architecture consisting of four interconnected components: (1) a Python-based Desktop Command-Line Interface (CLI) for standalone scanning operations with HMAC-protected signature databases, (2) a FastAPI-powered RESTful Backend API enabling centralized signature management and scan coordination, (3) a React/TypeScript Web Frontend providing an intuitive browser-based interface, and (4) a React Native Mobile Application extending detection capabilities to mobile devices.
+
+Key contributions of this work include the implementation of tamper-proof signature storage using HMAC-SHA256, an integrated quarantine system for isolating detected threats, comprehensive scan logging and history tracking, and a unified API architecture enabling seamless cross-platform operation. The system supports 25+ pre-loaded malware signatures across various categories including trojans, ransomware, backdoors, and worms.
+
+Evaluation results demonstrate MalGuard's effectiveness in detecting known malware samples with 100\% accuracy for signature-matched threats, while maintaining low false-positive rates. Performance benchmarks show scan times competitive with established open-source solutions like ClamAV.
+
+\textbf{Keywords:} \textit{malware detection, signature-based detection, SHA-256 hashing, YARA rules, cross-platform security, REST API, Python, React, FastAPI, cybersecurity}
+
+% Acknowledgments
+\newpage
+\pdfbookmark[0]{Acknowledgments}{acknowledgments}
+\chapter*{Acknowledgments}
+\addcontentsline{toc}{section}{Acknowledgments}
+
+We would like to express our deepest gratitude to \textbf{Allah Almighty}, who blessed us with the strength, wisdom, and perseverance to complete this research project.
+
+We extend our sincere thanks to our supervisor, \textbf{Khan Bahadur Khattak}, for his invaluable guidance, continuous support, and encouragement throughout the development of this project. His expertise in cybersecurity and software engineering has been instrumental in shaping this work.
+
+We are grateful to the \textbf{Department of Information and Communication Engineering} at The Islamia University of Bahawalpur for providing us with the resources and academic environment necessary to pursue this research.
+
+We also acknowledge the open-source community whose tools and libraries---including Python, FastAPI, React, React Native, and YARA---made this project possible.
+
+Finally, we express our heartfelt appreciation to our \textbf{families and friends} for their unwavering support, patience, and motivation during our academic journey.
+
+\begin{flushright}
+\textit{Muhammad Mansoor} \\
+\textit{Adnan Hanif} \\
+December 2024
+\end{flushright}
+
+\newpage
+\pdfbookmark[0]{Contents}{contents}
+\tableofcontents
+\listoffigures
+\addcontentsline{toc}{section}{List of Figures}
+\newpage
+\listoftables
+\addcontentsline{toc}{section}{List of Tables}
+\newpage
+
+\newpage
+\pagenumbering{arabic}
+
+% Reapply fancy page style with explicit footer
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{}
+\lhead{\nouppercase{\textsc{\leftmark}}}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% Now include chapters
+\include{chapter1}
+\include{chapter2}
+\include{chapter3}
+\include{chapter4}
+\include{chapter5}
+\include{Appendix}
+
+% References
+\addcontentsline{toc}{chapter}{References}
+
+\bibliographystyle{IEEEtran}
+\renewcommand{\bibname}{References}
+\bibliography{references}
+
+\end{document}

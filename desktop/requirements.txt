@@ -1,0 +1,3 @@
+# MalGuard Desktop CLI Dependencies
+colorama>=0.4.6       # Colored terminal output
+yara-python>=4.3.0    # Optional: YARA rule support

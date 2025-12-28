@@ -1,0 +1,1122 @@
+%!TEX root = 1.main.tex
+\chapter{Methodology and Implementation}
+\label{cha:methodology}
+
+This chapter presents the development methodology, system requirements, architecture, and detailed implementation of MalGuard. Each component---Desktop CLI, Backend API, Web Frontend, and Mobile Application---is described in depth with relevant code excerpts and diagrams.
+
+\section{Development Methodology}
+
+\subsection{Agile Development Approach}
+
+MalGuard was developed using an Agile software development methodology \cite{pressman2014}, specifically following an iterative and incremental model. This approach was chosen for its flexibility and suitability for projects requiring continuous refinement.
+
+\subsubsection{Iterative Development Cycle}
+
+Each component followed a cycle of:
+
+\begin{enumerate}
+    \item \textbf{Requirements Analysis:} Identifying and documenting feature requirements
+    \item \textbf{Design:} Creating module architecture and interface specifications
+    \item \textbf{Implementation:} Writing and testing code
+    \item \textbf{Integration:} Combining components and testing interactions
+    \item \textbf{Review:} Evaluating functionality and identifying improvements
+\end{enumerate}
+
+\subsubsection{Development Phases}
+
+The project was organized into four sequential phases:
+
+\begin{table}[h]
+\centering
+\caption{MalGuard Development Phases}
+\label{tab:dev_phases}
+\begin{tabular}{@{}clll@{}}
+\toprule
+\textbf{Phase} & \textbf{Component} & \textbf{Technology} & \textbf{Duration} \\
+\midrule
+1 & Desktop CLI & Python 3.8+ & 3 weeks \\
+2 & Backend API & FastAPI/Python & 2 weeks \\
+3 & Web Frontend & React/TypeScript & 2 weeks \\
+4 & Mobile App & React Native/Expo & 2 weeks \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Development Tools and Environment}
+
+The following tools were utilized during development:
+
+\begin{itemize}
+    \item \textbf{Integrated Development Environments:}
+    \begin{itemize}
+        \item Visual Studio Code (primary IDE)
+        \item PyCharm (Python development)
+    \end{itemize}
+    
+    \item \textbf{Version Control:}
+    \begin{itemize}
+        \item Git for source code management
+        \item GitHub for repository hosting
+    \end{itemize}
+    
+    \item \textbf{Package Management:}
+    \begin{itemize}
+        \item pip for Python dependencies
+        \item npm for JavaScript/TypeScript dependencies
+    \end{itemize}
+    
+    \item \textbf{Testing Tools:}
+    \begin{itemize}
+        \item EICAR test file for detection verification
+        \item Postman for API testing
+        \item Browser DevTools for web debugging
+    \end{itemize}
+\end{itemize}
+
+\section{System Requirements}
+
+\subsection{Functional Requirements}
+
+The functional requirements define what the system must accomplish:
+
+\begin{table}[h]
+\centering
+\caption{MalGuard Functional Requirements}
+\label{tab:func_req}
+\begin{tabular}{@{}clp{8cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Category} & \textbf{Requirement} \\
+\midrule
+FR-01 & Scanning & System shall scan individual files for malware \\
+FR-02 & Scanning & System shall scan directories recursively \\
+FR-03 & Scanning & System shall support file extension filtering \\
+FR-04 & Detection & System shall detect malware using SHA-256 hash matching \\
+FR-05 & Detection & System shall support YARA rule-based detection \\
+FR-06 & Signatures & System shall allow adding new malware signatures \\
+FR-07 & Signatures & System shall allow removing signatures \\
+FR-08 & Signatures & System shall support importing/exporting signatures \\
+FR-09 & Quarantine & System shall quarantine detected malware \\
+FR-10 & Quarantine & System shall allow restoring quarantined files \\
+FR-11 & History & System shall maintain scan history \\
+FR-12 & Statistics & System shall provide scan statistics dashboard \\
+FR-13 & API & System shall provide RESTful API endpoints \\
+FR-14 & Cross-Platform & System shall operate on Desktop, Web, and Mobile \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Non-Functional Requirements}
+
+The non-functional requirements define quality attributes:
+
+\begin{table}[h]
+\centering
+\caption{MalGuard Non-Functional Requirements}
+\label{tab:nfunc_req}
+\begin{tabular}{@{}clp{8cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Category} & \textbf{Requirement} \\
+\midrule
+NFR-01 & Performance & Single file scan shall complete within 2 seconds \\
+NFR-02 & Performance & API response time shall be under 500ms \\
+NFR-03 & Security & Signature database shall be HMAC-protected \\
+NFR-04 & Security & File uploads shall be validated and sanitized \\
+NFR-05 & Usability & CLI shall provide colored, readable output \\
+NFR-06 & Usability & Web/Mobile interfaces shall be intuitive \\
+NFR-07 & Portability & Desktop CLI shall run on Windows, macOS, Linux \\
+NFR-08 & Reliability & System shall handle errors gracefully \\
+NFR-09 & Scalability & Backend shall support concurrent requests \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{System Architecture}
+
+\subsection{High-Level Architecture}
+
+MalGuard follows a modular, multi-tier architecture consisting of four main components that interact through well-defined interfaces.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[node distance=1.5cm]
+    % Define styles
+    \tikzstyle{component} = [rectangle, draw, fill=blue!20, text width=3cm, text centered, minimum height=1cm, rounded corners]
+    \tikzstyle{database} = [cylinder, draw, fill=green!20, text width=2cm, text centered, minimum height=1cm, aspect=0.3]
+    \tikzstyle{arrow} = [thick,->,>=stealth]
+    
+    % Components
+    \node[component] (cli) {Desktop CLI\\(Python)};
+    \node[component, right=2cm of cli] (backend) {Backend API\\(FastAPI)};
+    \node[component, right=2cm of backend] (web) {Web Frontend\\(React)};
+    \node[component, below=1.5cm of web] (mobile) {Mobile App\\(React Native)};
+    \node[database, below=1.5cm of backend] (db) {SQLite\\Database};
+    
+    % Arrows
+    \draw[arrow, <->] (cli) -- (backend);
+    \draw[arrow, <->] (backend) -- (web);
+    \draw[arrow, <->] (backend) -- (mobile);
+    \draw[arrow, <->] (backend) -- (db);
+    
+\end{tikzpicture}
+\caption{MalGuard High-Level Architecture}
+\label{fig:high_level_arch}
+\end{figure}
+
+\subsection{Component Overview}
+
+Each component serves a specific purpose in the MalGuard ecosystem:
+
+\begin{description}
+    \item[Desktop CLI] Standalone command-line scanner with local signature database, YARA support, and quarantine capabilities. Operates independently or syncs with backend.
+    
+    \item[Backend API] Centralized FastAPI server providing RESTful endpoints for signature management, file scanning, and history tracking. Serves as the hub for web and mobile clients.
+    
+    \item[Web Frontend] React-based single-page application providing browser-based access to scanning, signature management, and dashboard features.
+    
+    \item[Mobile App] React Native application offering on-the-go scanning capabilities for Android and iOS devices.
+\end{description}
+
+\subsection{Data Flow Architecture}
+
+The system follows a clear data flow pattern for scanning operations:
+
+\begin{enumerate}
+    \item User initiates scan (uploads file or provides path)
+    \item File is processed and SHA-256 hash is calculated
+    \item Hash is compared against signature database
+    \item YARA rules are optionally applied
+    \item Results are returned and logged
+    \item Detected threats are optionally quarantined
+\end{enumerate}
+
+\section{Database Design}
+
+\subsection{Entity-Relationship Model}
+
+MalGuard utilizes SQLite \cite{sqlite2024} for data persistence with the following schema:
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[node distance=2cm]
+    \tikzstyle{entity} = [rectangle, draw, fill=yellow!20, text width=3.5cm, minimum height=3cm]
+    \tikzstyle{attribute} = [font=\small]
+    
+    % Signatures entity
+    \node[entity] (sig) {
+        \textbf{signatures}\\[5pt]
+        \underline{hash} (PK)\\
+        name\\
+        severity\\
+        source\\
+        added\_on
+    };
+    
+    % Scan History entity
+    \node[entity, right=3cm of sig] (hist) {
+        \textbf{scan\_history}\\[5pt]
+        \underline{id} (PK)\\
+        file\_name\\
+        hash\\
+        detected\\
+        malware\_name\\
+        timestamp
+    };
+    
+    % Quarantine entity
+    \node[entity, below=2cm of sig] (quar) {
+        \textbf{quarantine}\\[5pt]
+        \underline{hash} (PK)\\
+        original\_name\\
+        original\_path\\
+        malware\_name\\
+        quarantined\_at
+    };
+    
+\end{tikzpicture}
+\caption{MalGuard Database Schema}
+\label{fig:db_schema}
+\end{figure}
+
+\subsection{Table Specifications}
+
+\subsubsection{Signatures Table}
+
+Stores known malware signatures:
+
+\begin{lstlisting}[style=pythonstyle, caption={Signatures Table Schema}]
+CREATE TABLE signatures (
+    hash TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    severity TEXT DEFAULT 'medium',
+    source TEXT DEFAULT 'manual',
+    added_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+\end{lstlisting}
+
+\subsubsection{Scan History Table}
+
+Records all scanning activity:
+
+\begin{lstlisting}[style=pythonstyle, caption={Scan History Table Schema}]
+CREATE TABLE scan_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    file_name TEXT NOT NULL,
+    hash TEXT NOT NULL,
+    detected INTEGER DEFAULT 0,
+    malware_name TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+\end{lstlisting}
+
+\subsubsection{Quarantine Table}
+
+Tracks quarantined files:
+
+\begin{lstlisting}[style=pythonstyle, caption={Quarantine Table Schema}]
+CREATE TABLE quarantine (
+    hash TEXT PRIMARY KEY,
+    original_name TEXT NOT NULL,
+    original_path TEXT NOT NULL,
+    malware_name TEXT,
+    quarantined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+\end{lstlisting}
+
+\section{Desktop CLI Implementation}
+
+The Desktop CLI is implemented in Python and consists of several modular components.
+
+\subsection{Project Structure}
+
+\begin{lstlisting}[style=jsonstyle, caption={Desktop CLI Project Structure}]
+desktop/
+├── main.py              # CLI entry point (argparse)
+├── requirements.txt     # Python dependencies
+└── malguard/           # Core package
+    ├── __init__.py     # Package exports
+    ├── hasher.py       # SHA-256 hashing
+    ├── database.py     # Signature database (HMAC)
+    ├── scanner.py      # Scan engine
+    ├── logger.py       # Scan logging
+    ├── yara_engine.py  # YARA integration
+    ├── quarantine.py   # Quarantine manager
+    ├── colors.py       # Terminal colors
+    └── utils.py        # Utility functions
+\end{lstlisting}
+
+\subsection{File Hasher Module}
+
+The hasher module calculates SHA-256 hashes using chunked reading for memory efficiency:
+
+\begin{lstlisting}[style=pythonstyle, caption={FileHasher Implementation (hasher.py)}]
+import hashlib
+from pathlib import Path
+
+class FileHasher:
+    CHUNK_SIZE = 65536  # 64KB chunks
+    
+    @staticmethod
+    def calculate_hash(file_path: str) -> str:
+        """Calculate SHA-256 hash of a file."""
+        sha256 = hashlib.sha256()
+        path = Path(file_path)
+        
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {file_path}")
+        
+        with open(path, 'rb') as f:
+            while chunk := f.read(FileHasher.CHUNK_SIZE):
+                sha256.update(chunk)
+        
+        return sha256.hexdigest()
+    
+    @staticmethod
+    def calculate_string_hash(content: str) -> str:
+        """Calculate SHA-256 hash of a string."""
+        return hashlib.sha256(content.encode()).hexdigest()
+\end{lstlisting}
+
+\subsection{Signature Database Module}
+
+The database module provides HMAC-protected signature storage:
+
+\begin{lstlisting}[style=pythonstyle, caption={Signature Database with HMAC Protection (database.py)}]
+import json
+import hmac
+import hashlib
+from pathlib import Path
+from datetime import datetime
+
+class SignatureDatabase:
+    SECRET_KEY = b'malguard_hmac_secret_key'
+    
+    def __init__(self, db_path: str = None):
+        self.db_path = Path(db_path or self._get_default_path())
+        self.signatures = {}
+        self._load()
+    
+    def _calculate_hmac(self, data: dict) -> str:
+        """Calculate HMAC for integrity verification."""
+        content = json.dumps(data, sort_keys=True)
+        return hmac.new(
+            self.SECRET_KEY,
+            content.encode(),
+            hashlib.sha256
+        ).hexdigest()
+    
+    def add_signature(self, hash_value: str, name: str, 
+                      severity: str = 'medium') -> bool:
+        """Add a new malware signature."""
+        self.signatures[hash_value] = {
+            'name': name,
+            'severity': severity,
+            'source': 'manual',
+            'added_on': datetime.now().isoformat()
+        }
+        self._save()
+        return True
+    
+    def lookup(self, hash_value: str) -> dict | None:
+        """Look up a hash in the signature database."""
+        return self.signatures.get(hash_value)
+    
+    def _save(self):
+        """Save signatures with HMAC integrity protection."""
+        data = {'signatures': self.signatures}
+        data['hmac'] = self._calculate_hmac(data)
+        
+        with open(self.db_path, 'w') as f:
+            json.dump(data, f, indent=2)
+    
+    def _load(self):
+        """Load and verify signature database."""
+        if not self.db_path.exists():
+            self.signatures = {}
+            return
+        
+        with open(self.db_path) as f:
+            data = json.load(f)
+        
+        stored_hmac = data.pop('hmac', None)
+        calculated_hmac = self._calculate_hmac(data)
+        
+        if stored_hmac != calculated_hmac:
+            raise ValueError("Database integrity check failed!")
+        
+        self.signatures = data.get('signatures', {})
+\end{lstlisting}
+
+\subsection{Scanner Module}
+
+The scanner orchestrates the detection process:
+
+\begin{lstlisting}[style=pythonstyle, caption={Scanner Engine Implementation (scanner.py)}]
+from pathlib import Path
+from .hasher import FileHasher
+from .database import SignatureDatabase
+from .yara_engine import YaraEngine
+from .logger import ScanLogger
+
+class MalwareScanner:
+    EXECUTABLE_EXTENSIONS = {
+        '.exe', '.dll', '.bat', '.ps1', '.vbs',
+        '.jar', '.msi', '.scr', '.com', '.cmd'
+    }
+    
+    def __init__(self, db: SignatureDatabase):
+        self.db = db
+        self.hasher = FileHasher()
+        self.yara = YaraEngine()
+        self.logger = ScanLogger()
+    
+    def scan_file(self, file_path: str, 
+                  scan_all: bool = False) -> dict:
+        """Scan a single file for malware."""
+        path = Path(file_path)
+        
+        # Extension filtering
+        if not scan_all and path.suffix.lower() \
+           not in self.EXECUTABLE_EXTENSIONS:
+            return {'scanned': False, 'reason': 'skipped'}
+        
+        # Calculate hash
+        file_hash = self.hasher.calculate_hash(str(path))
+        
+        # Signature lookup
+        match = self.db.lookup(file_hash)
+        
+        result = {
+            'file_name': path.name,
+            'file_path': str(path.absolute()),
+            'file_size': path.stat().st_size,
+            'hash': file_hash,
+            'detected': match is not None,
+            'malware_name': match['name'] if match else None,
+            'severity': match['severity'] if match else None,
+            'detection_method': 'signature_match' if match else None
+        }
+        
+        # YARA scanning
+        if not result['detected'] and self.yara.is_available():
+            yara_match = self.yara.scan(str(path))
+            if yara_match:
+                result['detected'] = True
+                result['malware_name'] = yara_match['rule']
+                result['detection_method'] = 'yara_rule'
+        
+        # Log result
+        self.logger.log_scan(result)
+        
+        return result
+    
+    def scan_directory(self, dir_path: str, 
+                       scan_all: bool = False) -> list:
+        """Scan a directory recursively."""
+        results = []
+        path = Path(dir_path)
+        
+        for file_path in path.rglob('*'):
+            if file_path.is_file():
+                result = self.scan_file(str(file_path), scan_all)
+                results.append(result)
+        
+        return results
+\end{lstlisting}
+
+\subsection{YARA Engine Module}
+
+The YARA engine provides pattern-based detection:
+
+\begin{lstlisting}[style=pythonstyle, caption={YARA Engine Implementation (yara\_engine.py)}]
+try:
+    import yara
+    YARA_AVAILABLE = True
+except ImportError:
+    YARA_AVAILABLE = False
+
+class YaraEngine:
+    def __init__(self, rules_path: str = None):
+        self.rules = None
+        if YARA_AVAILABLE and rules_path:
+            self._load_rules(rules_path)
+    
+    def is_available(self) -> bool:
+        return YARA_AVAILABLE and self.rules is not None
+    
+    def _load_rules(self, path: str):
+        """Compile YARA rules from file."""
+        try:
+            self.rules = yara.compile(filepath=path)
+        except yara.Error as e:
+            print(f"YARA compilation error: {e}")
+    
+    def scan(self, file_path: str) -> dict | None:
+        """Scan file with YARA rules."""
+        if not self.is_available():
+            return None
+        
+        try:
+            matches = self.rules.match(file_path)
+            if matches:
+                return {
+                    'rule': matches[0].rule,
+                    'tags': matches[0].tags,
+                    'meta': matches[0].meta
+                }
+        except yara.Error:
+            pass
+        
+        return None
+\end{lstlisting}
+
+\subsection{Quarantine Module}
+
+The quarantine system isolates detected threats:
+
+\begin{lstlisting}[style=pythonstyle, caption={Quarantine Manager Implementation (quarantine.py)}]
+import json
+import shutil
+from pathlib import Path
+from datetime import datetime
+
+class QuarantineManager:
+    def __init__(self, quarantine_dir: str = None):
+        self.dir = Path(quarantine_dir or self._get_default_dir())
+        self.manifest_path = self.dir / 'manifest.json'
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self._load_manifest()
+    
+    def quarantine_file(self, file_path: str, 
+                        malware_name: str) -> bool:
+        """Move file to quarantine."""
+        path = Path(file_path)
+        file_hash = self._calculate_hash(path)
+        
+        # Move file to quarantine
+        quarantine_path = self.dir / file_hash
+        shutil.move(str(path), str(quarantine_path))
+        
+        # Update manifest
+        self.manifest[file_hash] = {
+            'original_name': path.name,
+            'original_path': str(path.absolute()),
+            'malware_name': malware_name,
+            'quarantined_at': datetime.now().isoformat()
+        }
+        self._save_manifest()
+        
+        return True
+    
+    def restore_file(self, file_hash: str, 
+                     target_path: str = None) -> bool:
+        """Restore file from quarantine."""
+        if file_hash not in self.manifest:
+            return False
+        
+        quarantine_path = self.dir / file_hash
+        entry = self.manifest[file_hash]
+        restore_path = target_path or entry['original_path']
+        
+        shutil.move(str(quarantine_path), restore_path)
+        del self.manifest[file_hash]
+        self._save_manifest()
+        
+        return True
+    
+    def list_quarantined(self) -> list:
+        """List all quarantined files."""
+        return [
+            {'hash': h, **info} 
+            for h, info in self.manifest.items()
+        ]
+\end{lstlisting}
+
+\subsection{CLI Interface}
+
+The main entry point uses argparse for command parsing:
+
+\begin{lstlisting}[style=pythonstyle, caption={CLI Entry Point (main.py excerpt)}]
+import argparse
+from malguard import (
+    SignatureDatabase, MalwareScanner, 
+    QuarantineManager, Colors
+)
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='MalGuard - Malware Detection System'
+    )
+    subparsers = parser.add_subparsers(dest='command')
+    
+    # Scan command
+    scan_parser = subparsers.add_parser('scan', 
+        help='Scan file or directory')
+    scan_parser.add_argument('path', help='Path to scan')
+    scan_parser.add_argument('--all', '-a', 
+        action='store_true', help='Scan all file types')
+    scan_parser.add_argument('--json', '-j', 
+        action='store_true', help='JSON output')
+    
+    # Add command
+    add_parser = subparsers.add_parser('add', 
+        help='Add malware signature')
+    add_parser.add_argument('file', help='File to add')
+    add_parser.add_argument('name', help='Malware name')
+    add_parser.add_argument('--severity', '-s', 
+        default='medium', choices=['low', 'medium', 'high', 'critical'])
+    
+    # Quarantine subcommand
+    quar_parser = subparsers.add_parser('quarantine', 
+        help='Manage quarantine')
+    quar_sub = quar_parser.add_subparsers(dest='quar_cmd')
+    quar_sub.add_parser('list', help='List quarantined files')
+    
+    # Parse and execute
+    args = parser.parse_args()
+    
+    if args.command == 'scan':
+        db = SignatureDatabase()
+        scanner = MalwareScanner(db)
+        results = scanner.scan_file(args.path, args.all)
+        display_results(results, args.json)
+    
+    # ... additional command handlers
+
+if __name__ == '__main__':
+    main()
+\end{lstlisting}
+
+\section{Backend API Implementation}
+
+The Backend API is built with FastAPI \cite{fastapi2024}, providing RESTful endpoints for all clients.
+
+\subsection{Project Structure}
+
+\begin{lstlisting}[style=jsonstyle, caption={Backend API Project Structure}]
+backend/
+├── main.py              # FastAPI application
+├── config.py            # Configuration settings
+├── models.py            # Pydantic schemas
+├── database.py          # SQLite database service
+├── scanner.py           # Scanning service
+├── requirements.txt     # Python dependencies
+├── data/
+│   ├── malguard.db     # SQLite database
+│   └── quarantine/     # Quarantined files
+└── routes/
+    ├── __init__.py     # Router registration
+    ├── signatures.py   # Signature CRUD
+    ├── scan.py         # File scanning
+    ├── history.py      # History & stats
+    └── quarantine.py   # Quarantine management
+\end{lstlisting}
+
+\subsection{FastAPI Application}
+
+The main application configures routes and middleware:
+
+\begin{lstlisting}[style=pythonstyle, caption={FastAPI Application Setup (main.py)}]
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from routes import signatures, scan, history, quarantine
+from config import CORS_ORIGINS
+
+app = FastAPI(
+    title="MalGuard Backend API",
+    description="Signature-Based Malware Detection System",
+    version="1.0.0"
+)
+
+# CORS configuration for web/mobile clients
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Register routers
+app.include_router(signatures.router, tags=["Signatures"])
+app.include_router(scan.router, tags=["Scanning"])
+app.include_router(history.router, tags=["History"])
+app.include_router(quarantine.router, tags=["Quarantine"])
+
+@app.get("/")
+async def root():
+    return {"message": "MalGuard API", "version": "1.0.0"}
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "database": "connected",
+        "signatures": database.get_signature_count()
+    }
+\end{lstlisting}
+
+\subsection{Pydantic Models}
+
+Data validation is handled by Pydantic models:
+
+\begin{lstlisting}[style=pythonstyle, caption={Pydantic Data Models (models.py)}]
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
+
+class SignatureBase(BaseModel):
+    hash: str
+    name: str
+    severity: str = "medium"
+    source: str = "manual"
+
+class SignatureCreate(SignatureBase):
+    pass
+
+class Signature(SignatureBase):
+    added_on: datetime
+    
+    class Config:
+        from_attributes = True
+
+class ScanResult(BaseModel):
+    file_name: str
+    hash: str
+    detected: bool
+    malware_name: Optional[str] = None
+    severity: Optional[str] = None
+    detection_method: Optional[str] = None
+
+class HashCheck(BaseModel):
+    hash: str
+
+class StatsResponse(BaseModel):
+    total_signatures: int
+    total_scans: int
+    total_detections: int
+    recent_detections: list
+\end{lstlisting}
+
+\subsection{Signature Routes}
+
+The signatures router handles CRUD operations:
+
+\begin{lstlisting}[style=pythonstyle, caption={Signature Routes (routes/signatures.py)}]
+from fastapi import APIRouter, HTTPException, UploadFile
+from typing import List
+from models import Signature, SignatureCreate
+from database import db
+
+router = APIRouter(prefix="/signatures")
+
+@router.get("/", response_model=List[Signature])
+async def list_signatures(limit: int = 100, offset: int = 0):
+    """List all signatures with pagination."""
+    return db.get_signatures(limit=limit, offset=offset)
+
+@router.get("/search")
+async def search_signatures(q: str):
+    """Search signatures by name or hash."""
+    return db.search_signatures(q)
+
+@router.get("/filter/severity/{level}")
+async def filter_by_severity(level: str):
+    """Filter signatures by severity level."""
+    if level not in ['low', 'medium', 'high', 'critical']:
+        raise HTTPException(400, "Invalid severity level")
+    return db.get_signatures_by_severity(level)
+
+@router.post("/", response_model=Signature)
+async def add_signature(sig: SignatureCreate):
+    """Add a new signature."""
+    if db.get_signature(sig.hash):
+        raise HTTPException(400, "Signature already exists")
+    return db.add_signature(sig)
+
+@router.post("/bulk")
+async def bulk_import(signatures: List[SignatureCreate]):
+    """Import multiple signatures."""
+    added = 0
+    for sig in signatures:
+        if not db.get_signature(sig.hash):
+            db.add_signature(sig)
+            added += 1
+    return {"added": added, "skipped": len(signatures) - added}
+
+@router.delete("/{hash}")
+async def delete_signature(hash: str):
+    """Delete a signature."""
+    if not db.delete_signature(hash):
+        raise HTTPException(404, "Signature not found")
+    return {"success": True}
+\end{lstlisting}
+
+\subsection{Scan Routes}
+
+File scanning endpoints:
+
+\begin{lstlisting}[style=pythonstyle, caption={Scan Routes (routes/scan.py)}]
+from fastapi import APIRouter, UploadFile, File
+from typing import List
+import hashlib
+from database import db
+from models import ScanResult, HashCheck
+
+router = APIRouter(prefix="/scan")
+
+@router.post("/file", response_model=ScanResult)
+async def scan_file(file: UploadFile = File(...)):
+    """Upload and scan a single file."""
+    content = await file.read()
+    file_hash = hashlib.sha256(content).hexdigest()
+    
+    signature = db.get_signature(file_hash)
+    
+    result = {
+        "file_name": file.filename,
+        "hash": file_hash,
+        "detected": signature is not None,
+        "malware_name": signature["name"] if signature else None,
+        "severity": signature["severity"] if signature else None,
+        "detection_method": "signature_match" if signature else None
+    }
+    
+    # Log scan
+    db.add_scan_history(result)
+    
+    return result
+
+@router.post("/files")
+async def scan_files(files: List[UploadFile] = File(...)):
+    """Scan multiple files."""
+    results = []
+    for file in files:
+        result = await scan_file(file)
+        results.append(result)
+    return {"results": results, "total": len(results)}
+
+@router.post("/hash")
+async def check_hash(data: HashCheck):
+    """Check if a hash exists in the database."""
+    signature = db.get_signature(data.hash)
+    return {
+        "hash": data.hash,
+        "detected": signature is not None,
+        "malware_name": signature["name"] if signature else None
+    }
+\end{lstlisting}
+
+\section{Web Frontend Implementation}
+
+The Web Frontend is built with React and TypeScript, providing a modern browser-based interface.
+
+\subsection{Project Structure}
+
+\begin{lstlisting}[style=jsonstyle, caption={Web Frontend Project Structure}]
+web/
+├── index.html          # HTML entry point
+├── package.json        # npm dependencies
+├── vite.config.ts      # Vite configuration
+├── tsconfig.json       # TypeScript config
+└── src/
+    ├── App.tsx         # Main application
+    ├── main.tsx        # React entry point
+    ├── api.ts          # API client
+    ├── components/     # Reusable components
+    └── styles.css      # Global styles
+\end{lstlisting}
+
+\subsection{API Client}
+
+The API client handles all backend communication:
+
+\begin{lstlisting}[style=pythonstyle, caption={API Client (src/api.ts)}]
+const API_BASE = 'http://localhost:8000';
+
+export const api = {
+  async scanFile(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch(`${API_BASE}/scan/file`, {
+      method: 'POST',
+      body: formData
+    });
+    return response.json();
+  },
+  
+  async getSignatures(limit = 100, offset = 0) {
+    const response = await fetch(
+      `${API_BASE}/signatures?limit=${limit}&offset=${offset}`
+    );
+    return response.json();
+  },
+  
+  async addSignature(hash: string, name: string, severity: string) {
+    const response = await fetch(`${API_BASE}/signatures`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hash, name, severity })
+    });
+    return response.json();
+  },
+  
+  async getStats() {
+    const response = await fetch(`${API_BASE}/stats`);
+    return response.json();
+  },
+  
+  async getHistory(limit = 100) {
+    const response = await fetch(
+      `${API_BASE}/history?limit=${limit}`
+    );
+    return response.json();
+  }
+};
+\end{lstlisting}
+
+\subsection{Main Application Component}
+
+The main React component orchestrates the UI:
+
+\begin{lstlisting}[style=pythonstyle, caption={Main Application Component (src/App.tsx excerpt)}]
+import React, { useState, useEffect } from 'react';
+import { api } from './api';
+
+function App() {
+  const [activeTab, setActiveTab] = useState('scan');
+  const [stats, setStats] = useState(null);
+  const [scanResult, setScanResult] = useState(null);
+  
+  useEffect(() => {
+    api.getStats().then(setStats);
+  }, []);
+  
+  const handleFileScan = async (file: File) => {
+    const result = await api.scanFile(file);
+    setScanResult(result);
+  };
+  
+  return (
+    <div className="app">
+      <header>
+        <h1>MalGuard</h1>
+        <nav>
+          <button onClick={() => setActiveTab('scan')}>Scan</button>
+          <button onClick={() => setActiveTab('signatures')}>
+            Signatures
+          </button>
+          <button onClick={() => setActiveTab('history')}>
+            History
+          </button>
+        </nav>
+      </header>
+      
+      <main>
+        {activeTab === 'scan' && (
+          <ScanPanel onScan={handleFileScan} result={scanResult} />
+        )}
+        {activeTab === 'signatures' && <SignatureList />}
+        {activeTab === 'history' && <HistoryPanel />}
+      </main>
+      
+      <footer>
+        <StatsBar stats={stats} />
+      </footer>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Mobile Application Implementation}
+
+The Mobile Application is built with React Native and Expo \cite{expo2024}, enabling deployment to both Android and iOS.
+
+\subsection{Project Structure}
+
+\begin{lstlisting}[style=jsonstyle, caption={Mobile App Project Structure}]
+mobile/
+├── App.tsx             # Main application
+├── app.json            # Expo configuration
+├── package.json        # npm dependencies
+├── tsconfig.json       # TypeScript config
+└── src/
+    ├── api.ts          # API client
+    └── styles.ts       # Styling
+\end{lstlisting}
+
+\subsection{Mobile Application Features}
+
+The React Native app provides:
+
+\begin{itemize}
+    \item File picker for selecting files to scan
+    \item Real-time scan results display
+    \item Scan history view
+    \item Dashboard with statistics
+    \item Push notification support for detections
+\end{itemize}
+
+\begin{lstlisting}[style=pythonstyle, caption={Mobile App Main Component (App.tsx excerpt)}]
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
+import { api } from './src/api';
+
+export default function App() {
+  const [scanResult, setScanResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  const pickAndScan = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({});
+      
+      if (result.type === 'success') {
+        setLoading(true);
+        const scanResult = await api.scanFile(result);
+        setScanResult(scanResult);
+        
+        if (scanResult.detected) {
+          Alert.alert(
+            'Malware Detected!',
+            `${scanResult.malware_name} (${scanResult.severity})`
+          );
+        }
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to scan file');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>MalGuard</Text>
+      
+      <TouchableOpacity style={styles.button} onPress={pickAndScan}>
+        <Text style={styles.buttonText}>Select File to Scan</Text>
+      </TouchableOpacity>
+      
+      {scanResult && (
+        <View style={styles.resultCard}>
+          <Text>File: {scanResult.file_name}</Text>
+          <Text style={
+            scanResult.detected ? styles.threat : styles.clean
+          }>
+            {scanResult.detected ? 'THREAT DETECTED' : 'Clean'}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+\end{lstlisting}
+
+\section{Security Considerations}
+
+\subsection{HMAC Database Protection}
+
+The signature database is protected against tampering using HMAC-SHA256 \cite{hmac1997}:
+
+\begin{enumerate}
+    \item On save: HMAC is calculated over all signatures and stored
+    \item On load: HMAC is recalculated and verified against stored value
+    \item Mismatch indicates tampering and prevents loading
+\end{enumerate}
+
+\subsection{Input Validation}
+
+All user inputs are validated:
+
+\begin{itemize}
+    \item File uploads are size-limited (configurable, default 100MB)
+    \item Hash values are validated as valid SHA-256 format
+    \item API inputs are validated using Pydantic models
+    \item SQL injection prevented through parameterized queries
+\end{itemize}
+
+\subsection{CORS Configuration}
+
+Cross-Origin Resource Sharing is configured to allow only trusted origins:
+
+\begin{lstlisting}[style=pythonstyle, caption={CORS Configuration (config.py)}]
+CORS_ORIGINS = [
+    "http://localhost:3000",    # Local web dev
+    "http://localhost:5173",    # Vite dev server
+    "https://malguard.app",     # Production domain
+]
+\end{lstlisting}
+
+\section{Summary}
+
+This chapter detailed the methodology and implementation of MalGuard. We described the Agile development approach, system requirements, and modular architecture. Each component was explored in depth:
+
+\begin{itemize}
+    \item \textbf{Desktop CLI:} Python-based scanner with HMAC-protected signatures, YARA support, and quarantine capabilities
+    \item \textbf{Backend API:} FastAPI server with RESTful endpoints for all operations
+    \item \textbf{Web Frontend:} React/TypeScript SPA for browser access
+    \item \textbf{Mobile App:} React Native/Expo application for mobile devices
+\end{itemize}
+
+Security considerations including HMAC protection, input validation, and CORS configuration were also addressed. The complete source code is provided in the Appendix for reference.

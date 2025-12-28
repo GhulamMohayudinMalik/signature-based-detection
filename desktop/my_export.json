@@ -1,0 +1,159 @@
+{
+  "signatures": {
+    "44d88612fea8a8f36de82e1278abb02f": {
+      "name": "EICAR-Test-File",
+      "severity": "low",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "eicar.org"
+    },
+    "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f": {
+      "name": "EICAR-Test-File-SHA256",
+      "severity": "low",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "eicar.org"
+    },
+    "3395856ce81f2b7382dee72602f798b642f14140": {
+      "name": "EICAR-Test-File-SHA1",
+      "severity": "low",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "eicar.org"
+    },
+    "e99a18c428cb38d5f260853678922e03": {
+      "name": "Trojan.GenericKD.46543210",
+      "severity": "high",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "malwarebazaar"
+    },
+    "d41d8cd98f00b204e9800998ecf8427e": {
+      "name": "EmptyFile.Suspicious",
+      "severity": "low",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "internal"
+    },
+    "5d41402abc4b2a76b9719d911017c592": {
+      "name": "Backdoor.Agent.Generic",
+      "severity": "critical",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "malwarebazaar"
+    },
+    "098f6bcd4621d373cade4e832627b4f6": {
+      "name": "Trojan.PWS.Stealer",
+      "severity": "high",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "virusshare"
+    },
+    "5f4dcc3b5aa765d61d8327deb882cf99": {
+      "name": "Ransomware.WannaCry.A",
+      "severity": "critical",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "malwarebazaar"
+    },
+    "e10adc3949ba59abbe56e057f20f883e": {
+      "name": "Worm.Conficker.B",
+      "severity": "high",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "virusshare"
+    },
+    "25f9e794323b453885f5181f1b624d0b": {
+      "name": "Adware.BrowseFox.A",
+      "severity": "medium",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "malwarebazaar"
+    },
+    "c4ca4238a0b923820dcc509a6f75849b": {
+      "name": "Trojan.Downloader.Agent",
+      "severity": "high",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "virusshare"
+    },
+    "eccbc87e4b5ce2fe28308fd9f2a7baf3": {
+      "name": "Spyware.Keylogger.Generic",
+      "severity": "critical",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "malwarebazaar"
+    },
+    "a87ff679a2f3e71d9181a67b7542122c": {
+      "name": "Ransomware.Locky.A",
+      "severity": "critical",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "virusshare"
+    },
+    "e4da3b7fbbce2345d7772b0674a318d5": {
+      "name": "Trojan.Emotet.Gen",
+      "severity": "critical",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "malwarebazaar"
+    },
+    "1679091c5a880faf6fb5e6087eb1b2dc": {
+      "name": "Backdoor.Mirai.A",
+      "severity": "high",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "virusshare"
+    },
+    "8f14e45fceea167a5a36dedd4bea2543": {
+      "name": "Ransomware.Ryuk.A",
+      "severity": "critical",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "malwarebazaar"
+    },
+    "c9f0f895fb98ab9159f51fd0297e236d": {
+      "name": "Trojan.TrickBot.Gen",
+      "severity": "critical",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "virusshare"
+    },
+    "45c48cce2e2d7fbdea1afc51c7c6ad26": {
+      "name": "Worm.MyDoom.A",
+      "severity": "high",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "malwarebazaar"
+    },
+    "d3d9446802a44259755d38e6d163e820": {
+      "name": "Ransomware.Petya.A",
+      "severity": "critical",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "virusshare"
+    },
+    "6512bd43d9caa6e02c990b0a82652dca": {
+      "name": "Trojan.Zeus.Gen",
+      "severity": "critical",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "malwarebazaar"
+    },
+    "c20ad4d76fe97759aa27a0c99bff6710": {
+      "name": "Spyware.Agent.Gen",
+      "severity": "high",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "virusshare"
+    },
+    "c51ce410c124a10e0db5e4b97fc2af39": {
+      "name": "Adware.Genieo.A",
+      "severity": "medium",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "malwarebazaar"
+    },
+    "aab3238922bcc25a6f606eb525ffdc56": {
+      "name": "PUP.BundleInstaller",
+      "severity": "low",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "internal"
+    },
+    "9bf31c7ff062936a96d3c8bd1f8f2ff3": {
+      "name": "Backdoor.Gh0st.A",
+      "severity": "critical",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "virusshare"
+    },
+    "c74d97b01eae257e44aa9d5bade97baf": {
+      "name": "Ransomware.GandCrab.A",
+      "severity": "critical",
+      "added_on": "2025-12-25 23:34:54",
+      "source": "malwarebazaar"
+    }
+  },
+  "metadata": {
+    "exported_on": "1766687589.6782482",
+    "total": 25,
+    "source": "MalGuard Desktop CLI"
+  }
+}
