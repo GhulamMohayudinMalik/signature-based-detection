@@ -1,0 +1,51 @@
+MalGuard - Your Mobile Malware Detection Shield
+
+Protect your device with MalGuard, a powerful signature-based malware detection app that scans your files for known threats. Whether you're downloading files, receiving attachments, or managing your storage, MalGuard helps you stay safe.
+
+🛡️ KEY FEATURES
+
+• Fast File Scanning - Scan any file on your device using SHA-256 hash matching against our comprehensive malware signature database
+
+• 100+ Malware Signatures - Our database includes signatures for ransomware, trojans, spyware, RATs, cryptominers, and more
+
+• Real-time Detection - Instantly identify known malware threats including WannaCry, Emotet, TrickBot, Cobalt Strike, and other notorious malware families
+
+• Scan History - Keep track of all your scans with detailed results showing file names, hashes, and detection status
+
+• Privacy-Focused - We never upload your files. Only cryptographic hashes are sent to our servers for comparison
+
+• Dark Theme UI - Modern, sleek interface designed for comfortable use
+
+🔒 HOW IT WORKS
+
+1. Select any file from your device
+2. MalGuard computes the file's SHA-256 hash locally
+3. The hash is compared against our signature database
+4. Instant results show if the file is clean or malicious
+
+📊 MALWARE CATEGORIES DETECTED
+
+• Ransomware (WannaCry, LockBit, REvil, Conti)
+• Banking Trojans (Emotet, TrickBot, Dridex, QakBot)
+• Remote Access Trojans (NanoCore, njRAT, Remcos)
+• Infostealers (RedLine, Raccoon, FormBook)
+• Cryptominers (XMRig, LemonDuck)
+• APT Malware (Lazarus, APT28, APT29)
+• Mobile Malware (Cerberus, Anubis, FluBot)
+
+⚡ PERFECT FOR
+
+• Security-conscious users who download files from various sources
+• IT professionals and security researchers
+• Anyone who wants an additional layer of malware protection
+• Educational purposes to learn about malware detection
+
+🔐 PRIVACY COMMITMENT
+
+Your privacy is our priority. MalGuard only transmits file hashes (not actual files) to our servers. We don't collect personal information, access your contacts, or share data with advertisers.
+
+📱 CONNECTED ECOSYSTEM
+
+MalGuard is part of a complete cross-platform security solution including desktop CLI and web interfaces. All platforms sync with the same malware signature database.
+
+Download MalGuard today and add an extra layer of protection to your mobile device!

@@ -1,0 +1,23 @@
+Version 1.0.0 - Initial Release
+
+🚀 What's New:
+
+• Initial release of MalGuard mobile app
+• File scanning with SHA-256 hash matching
+• 100+ malware signatures including ransomware, trojans, and spyware
+• Scan history tracking
+• Quarantine management
+• Real-time backend connectivity status
+• Modern dark theme UI
+• Cross-platform sync with MalGuard web and desktop
+
+🛡️ Malware Families Detected:
+- Ransomware: WannaCry, Petya, LockBit, REvil, Conti, DarkSide
+- Trojans: Emotet, TrickBot, Dridex, QakBot, Zeus
+- RATs: NanoCore, njRAT, Remcos, AsyncRAT, Cobalt Strike
+- Infostealers: RedLine, Raccoon, FormBook, LokiBot
+- APT Malware: Lazarus, APT28, APT29, Winnti
+- And many more...
+
+📧 Feedback:
+We'd love to hear from you! Contact us at support@malguard.online

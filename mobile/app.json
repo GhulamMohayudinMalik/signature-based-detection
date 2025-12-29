@@ -20,13 +20,24 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a0a0f"
       },
-      "package": "com.malguard.app"
+      "package": "com.malguard.app",
+      "versionCode": 1,
+      "permissions": [
+        "READ_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-asset"
-    ]
+      "expo-asset",
+      "expo-document-picker"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d2e55566-d946-41d2-b094-2912fc2e85c3"
+      }
+    },
+    "owner": "ghulammohayudin"
   }
 }
