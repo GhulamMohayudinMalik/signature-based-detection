@@ -223,3 +223,7 @@ service-account.json
 # Signature database with HMAC keys
 signatures.json
 manifest.json
+
+
+thesis/
+technical/
