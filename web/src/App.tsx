@@ -359,11 +359,6 @@ function Signatures() {
                         <div className="card-sub">{sigs.length} malware signatures loaded</div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <button className="btn btn-secondary btn-sm" onClick={handleExport}>📤 Export</button>
-                        <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
-                            📥 Import
-                            <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
-                        </label>
                         <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>➕ Add New</button>
                     </div>
                 </div>
