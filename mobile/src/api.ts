@@ -1,13 +1,13 @@
 /**
  * API Client for MalGuard Mobile
+ * 
+ * PRODUCTION: Update API_BASE to your deployed backend URL before building
  */
 
-// Replace with your actual backend URL
-// For local development with Android emulator, use 10.0.2.2 instead of localhost
-// For physical device, use your computer's IP address
-const API_BASE = 'http://10.0.2.2:8000'; // Android emulator
-// const API_BASE = 'http://localhost:8000'; // iOS simulator
-// const API_BASE = 'http://192.168.x.x:8000'; // Physical device
+// ========== API CONFIGURATION ==========
+// For production: Replace with your AWS backend URL (e.g., https://api.malguard.com)
+// For development: Use your local IP address
+const API_BASE = 'http://192.168.100.113:8000'; // UPDATE BEFORE PRODUCTION BUILD
 
 // ============== Types ==============
 

@@ -179,7 +179,7 @@ export default function App() {
             </View>
 
             {/* Content */}
-            <ScrollView style={styles.content}>
+            <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 40 }}>
                 {/* Offline Warning */}
                 {!online && (
                     <View style={[styles.card, { backgroundColor: colors.dangerBg, borderColor: colors.danger }]}>

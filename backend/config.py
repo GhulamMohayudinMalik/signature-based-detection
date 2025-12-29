@@ -1,8 +1,8 @@
 """
 MalGuard Backend Configuration
+Simple configuration without environment variables.
 """
 
-import os
 from pathlib import Path
 
 
@@ -23,17 +23,8 @@ MAX_UPLOAD_SIZE = 100 * 1024 * 1024  # 100 MB
 YARA_RULES_DIR = DATA_DIR / "yara_rules"
 YARA_RULES_DIR.mkdir(exist_ok=True)
 
-# Security
-SECRET_KEY = os.environ.get("MALGUARD_SECRET_KEY", "malguard-dev-secret-key-change-in-production")
-HMAC_KEY = os.environ.get("MALGUARD_HMAC_KEY", "malguard-hmac-key-2024").encode('utf-8')
-
-# CORS - Allow web and mobile clients
-CORS_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-]
+# CORS - Allow all origins
+CORS_ORIGINS = ["*"]
 
 # Suspicious file extensions
 SUSPICIOUS_EXTENSIONS = {

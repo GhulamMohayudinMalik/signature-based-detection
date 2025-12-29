@@ -4,6 +4,9 @@
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 
+# Production Server
+gunicorn>=21.0.0
+
 # File handling
 python-multipart>=0.0.6
 
@@ -15,3 +18,5 @@ python-jose[cryptography]>=3.3.0
 
 # Optional: YARA support
 yara-python>=4.3.0
+
+

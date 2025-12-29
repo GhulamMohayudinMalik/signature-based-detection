@@ -87,6 +87,7 @@ export const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
+    paddingBottom: 120, // Extra padding to avoid overlap with tab bar
   },
   
   // Cards
@@ -217,8 +218,8 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    paddingBottom: 20,
-    paddingTop: 10,
+    paddingBottom: 34, // Increased for safe area
+    paddingTop: 12,
   },
   tab: {
     flex: 1,
