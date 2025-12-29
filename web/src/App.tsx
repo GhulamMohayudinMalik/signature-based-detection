@@ -330,11 +330,13 @@ function Signatures() {
             const a = document.createElement('a');
             a.href = url;
             a.download = 'signatures_export.json';
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(url);
         } catch (e) {
             console.error('Export error:', e);
-            alert('Export failed');
+            alert('Export failed: ' + (e instanceof Error ? e.message : 'Unknown error'));
         }
     };
 
@@ -349,91 +351,93 @@ function Signatures() {
     };
 
     return (
-        <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                    <div className="card-title">🗄️ Signature Database</div>
-                    <div className="card-sub">{sigs.length} malware signatures loaded</div>
+        <>
+            <div className="card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                        <div className="card-title">🗄️ Signature Database</div>
+                        <div className="card-sub">{sigs.length} malware signatures loaded</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <button className="btn btn-secondary btn-sm" onClick={handleExport}>📤 Export</button>
+                        <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                            📥 Import
+                            <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
+                        </label>
+                        <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>➕ Add New</button>
+                    </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button className="btn btn-secondary btn-sm" onClick={handleExport}>📤 Export</button>
-                    <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
-                        📥 Import
-                        <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
-                    </label>
-                    <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>➕ Add New</button>
-                </div>
-            </div>
 
-            {/* Search & Filter */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
-                    <input
+                {/* Search & Filter */}
+                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
+                        <input
+                            className="form-input"
+                            placeholder="🔍 Search signatures..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                            style={{ paddingLeft: '1rem' }}
+                        />
+                    </div>
+                    <button className="btn btn-secondary btn-sm" onClick={handleSearch}>Search</button>
+                    <select
                         className="form-input"
-                        placeholder="🔍 Search signatures..."
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                        style={{ paddingLeft: '1rem' }}
-                    />
+                        value={filterSev}
+                        onChange={e => handleFilter(e.target.value)}
+                        style={{ width: 'auto', minWidth: '150px' }}
+                    >
+                        <option value="">All Severities</option>
+                        <option value="low">🟢 Low</option>
+                        <option value="medium">🟡 Medium</option>
+                        <option value="high">🟠 High</option>
+                        <option value="critical">🔴 Critical</option>
+                    </select>
                 </div>
-                <button className="btn btn-secondary btn-sm" onClick={handleSearch}>Search</button>
-                <select
-                    className="form-input"
-                    value={filterSev}
-                    onChange={e => handleFilter(e.target.value)}
-                    style={{ width: 'auto', minWidth: '150px' }}
-                >
-                    <option value="">All Severities</option>
-                    <option value="low">🟢 Low</option>
-                    <option value="medium">🟡 Medium</option>
-                    <option value="high">🟠 High</option>
-                    <option value="critical">🔴 Critical</option>
-                </select>
+
+                {loading ? (
+                    <div className="empty">
+                        <div className="scanning-ring"></div>
+                        <p>Loading signatures...</p>
+                    </div>
+                ) : sigs.length === 0 ? (
+                    <div className="empty">
+                        <div className="empty-icon">🗄️</div>
+                        <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No signatures found</p>
+                        <p style={{ fontSize: '0.9rem' }}>Add signatures or adjust your search filters</p>
+                    </div>
+                ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Malware Name</th>
+                                    <th>Hash (SHA-256)</th>
+                                    <th>Severity</th>
+                                    <th>Added</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sigs.map(s => (
+                                    <tr key={s.hash}>
+                                        <td>
+                                            <strong style={{ display: 'block', marginBottom: '0.25rem' }}>{s.name}</strong>
+                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{s.source}</span>
+                                        </td>
+                                        <td><span className="hash">{s.hash.slice(0, 16)}...</span></td>
+                                        <td><span className={`severity severity-${s.severity}`}>{s.severity}</span></td>
+                                        <td style={{ color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>{new Date(s.added_on).toLocaleDateString()}</td>
+                                        <td><button className="btn btn-danger btn-sm" onClick={() => handleRemove(s.hash)}>🗑️</button></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
-            {loading ? (
-                <div className="empty">
-                    <div className="scanning-ring"></div>
-                    <p>Loading signatures...</p>
-                </div>
-            ) : sigs.length === 0 ? (
-                <div className="empty">
-                    <div className="empty-icon">🗄️</div>
-                    <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No signatures found</p>
-                    <p style={{ fontSize: '0.9rem' }}>Add signatures or adjust your search filters</p>
-                </div>
-            ) : (
-                <div style={{ overflowX: 'auto' }}>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Malware Name</th>
-                                <th>Hash (SHA-256)</th>
-                                <th>Severity</th>
-                                <th>Added</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sigs.map(s => (
-                                <tr key={s.hash}>
-                                    <td>
-                                        <strong style={{ display: 'block', marginBottom: '0.25rem' }}>{s.name}</strong>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{s.source}</span>
-                                    </td>
-                                    <td><span className="hash">{s.hash.slice(0, 16)}...</span></td>
-                                    <td><span className={`severity severity-${s.severity}`}>{s.severity}</span></td>
-                                    <td style={{ color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>{new Date(s.added_on).toLocaleDateString()}</td>
-                                    <td><button className="btn btn-danger btn-sm" onClick={() => handleRemove(s.hash)}>🗑️</button></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-
-            {/* Add Modal */}
+            {/* Add Modal - OUTSIDE card for proper z-index */}
             {showAdd && (
                 <div className="modal-bg" onClick={() => setShowAdd(false)}>
                     <div className="modal" onClick={e => e.stopPropagation()}>
@@ -472,7 +476,7 @@ function Signatures() {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }
 
